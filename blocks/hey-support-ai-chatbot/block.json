@@ -1,0 +1,26 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "hey-support-ai-chatbot/embed",
+	"title": "Hey Support",
+	"category": "widgets",
+	"description": "Embed the Hey Support AI chatbot widget on this page.",
+	"keywords": ["chatbot", "ai", "support", "leads", "woocommerce"],
+	"textdomain": "hey-support-ai-chatbot",
+	"supports": {
+		"html": false,
+		"reusable": true,
+		"multiple": false
+	},
+	"attributes": {
+		"chatbotId": {
+			"type": "string",
+			"default": ""
+		},
+		"autoOpen": {
+			"type": "boolean",
+			"default": false
+		}
+	},
+	"editorScript": "file:./index.js"
+}
