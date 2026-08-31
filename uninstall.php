@@ -15,10 +15,13 @@ defined( 'WP_UNINSTALL_PLUGIN' ) || exit;
  * Wrapped in a function so the loop variable stays out of the global scope.
  */
 function hey_support_uninstall_cleanup(): void {
-	$option = 'hey_support_settings';
+	// Both rows: the settings, and any in-flight connect handshakes.
+	$options = [ 'hey_support_settings', 'hey_support_links' ];
 
 	if ( ! is_multisite() ) {
-		delete_option( $option );
+		foreach ( $options as $option ) {
+			delete_option( $option );
+		}
 		return;
 	}
 
@@ -29,7 +32,9 @@ function hey_support_uninstall_cleanup(): void {
 		]
 	) as $site_id ) {
 		switch_to_blog( (int) $site_id );
-		delete_option( $option );
+		foreach ( $options as $option ) {
+			delete_option( $option );
+		}
 		restore_current_blog();
 	}
 }

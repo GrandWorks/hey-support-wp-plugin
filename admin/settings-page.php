@@ -100,6 +100,8 @@ function hey_support_render_settings_page(): void {
 			?>
 		</p>
 
+		<?php hey_support_render_connect_panel( $opts ); ?>
+
 		<form method="post" action="options.php">
 			<?php settings_fields( 'hey_support_settings_group' ); ?>
 
@@ -280,6 +282,80 @@ function hey_support_render_settings_page(): void {
 		</form>
 	</div>
 	<?php
+}
+
+/**
+ * The one-click connect panel.
+ *
+ * Deliberately ABOVE the settings form and outside it: navigating away from a
+ * form discards unsaved edits, so Connect must not be a submit button sitting
+ * inside one.
+ */
+function hey_support_render_connect_panel( array $opts ): void {
+	$result = get_transient( 'hey_support_connect_result' );
+	if ( $result ) {
+		delete_transient( 'hey_support_connect_result' );
+		$name = get_transient( 'hey_support_connected_name' );
+		delete_transient( 'hey_support_connected_name' );
+		hey_support_connect_result_notice( (string) $result, is_string( $name ) ? $name : '' );
+	}
+
+	$connected = '' !== (string) $opts['chatbot_id'];
+	?>
+	<div class="notice notice-<?php echo $connected ? 'success' : 'info'; ?> inline" style="margin:16px 0;padding:12px 14px;">
+		<?php if ( $connected ) : ?>
+			<p style="margin:0 0 8px;">
+				<strong><?php esc_html_e( 'Your agent is connected.', 'hey-support-ai-chatbot' ); ?></strong>
+				<?php esc_html_e( 'It is live on this site.', 'hey-support-ai-chatbot' ); ?>
+			</p>
+		<?php else : ?>
+			<p style="margin:0 0 8px;">
+				<strong><?php esc_html_e( 'Connect this site to Hey Support.', 'hey-support-ai-chatbot' ); ?></strong>
+				<?php esc_html_e( 'Pick your agent on Hey Support and come straight back. Nothing to copy or paste.', 'hey-support-ai-chatbot' ); ?>
+			</p>
+		<?php endif; ?>
+		<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="margin:0;">
+			<input type="hidden" name="action" value="hey_support_connect" />
+			<?php wp_nonce_field( 'hey_support_connect' ); ?>
+			<button type="submit" class="button <?php echo $connected ? '' : 'button-primary'; ?>">
+				<?php
+				echo $connected
+					? esc_html__( 'Connect a different agent', 'hey-support-ai-chatbot' )
+					: esc_html__( 'Connect to Hey Support', 'hey-support-ai-chatbot' );
+				?>
+			</button>
+		</form>
+	</div>
+	<?php
+}
+
+/** One line per outcome, naming the fix where there is one. */
+function hey_support_connect_result_notice( string $code, string $name ): void {
+	$ok = 'ok' === $code;
+	switch ( $code ) {
+		case 'ok':
+			$message = '' !== $name
+				/* translators: %s: the connected agent's name. */
+				? sprintf( __( 'Connected to %s. Your agent is live on this site.', 'hey-support-ai-chatbot' ), $name )
+				: __( 'Connected. Your agent is live on this site.', 'hey-support-ai-chatbot' );
+			break;
+		case 'expired':
+			$message = __( 'That connect link had expired. Press Connect to try again.', 'hey-support-ai-chatbot' );
+			break;
+		case 'wrong_user':
+			$message = __( 'That connect link was started by a different user. Press Connect to start your own.', 'hey-support-ai-chatbot' );
+			break;
+		case 'network':
+			$message = __( 'We could not reach Hey Support from this server. Check outbound connections and try again.', 'hey-support-ai-chatbot' );
+			break;
+		default:
+			$message = __( 'Hey Support could not confirm that connection. Press Connect to try again.', 'hey-support-ai-chatbot' );
+	}
+	printf(
+		'<div class="notice notice-%s is-dismissible"><p>%s</p></div>',
+		$ok ? 'success' : 'error',
+		esc_html( $message )
+	);
 }
 
 // --- AJAX: Verify token -----------------------------------------------------

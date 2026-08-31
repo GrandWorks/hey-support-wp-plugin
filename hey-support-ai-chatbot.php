@@ -21,13 +21,17 @@ define( 'HEY_SUPPORT_VERSION', '1.1.0' );
 define( 'HEY_SUPPORT_FILE', __FILE__ );
 define( 'HEY_SUPPORT_DIR', plugin_dir_path( __FILE__ ) );
 define( 'HEY_SUPPORT_URL', plugin_dir_url( __FILE__ ) );
-define( 'HEY_SUPPORT_API_BASE', 'https://hey.support' );
+// Overridable from wp-config.php so a development site can point at a local
+// server. The connect handshake requires hey.support to reach THIS site, so a
+// local install cannot use it and falls back to pasting an ID.
+defined( 'HEY_SUPPORT_API_BASE' ) || define( 'HEY_SUPPORT_API_BASE', 'https://hey.support' );
 
 require_once HEY_SUPPORT_DIR . 'includes/options.php';
 require_once HEY_SUPPORT_DIR . 'includes/api-client.php';
 require_once HEY_SUPPORT_DIR . 'includes/embed.php';
 require_once HEY_SUPPORT_DIR . 'includes/shortcode.php';
 require_once HEY_SUPPORT_DIR . 'includes/gutenberg-block.php';
+require_once HEY_SUPPORT_DIR . 'includes/connect.php';
 require_once HEY_SUPPORT_DIR . 'includes/woocommerce.php';
 
 if ( is_admin() ) {
