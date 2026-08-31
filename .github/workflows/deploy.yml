@@ -1,0 +1,27 @@
+name: Deploy to WordPress.org
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Release to the plugin directory
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Publish to WordPress.org SVN
+        uses: 10up/action-wordpress-plugin-deploy@stable
+        env:
+          SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
+          SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
+          # Load-bearing. The action defaults SLUG to the REPOSITORY name
+          # (hey-support-wp-plugin), which is not the WordPress.org slug. Left
+          # unset this deploys to a plugin that does not exist.
+          SLUG: hey-support-ai-chatbot
+          ASSETS_DIR: .wordpress-org

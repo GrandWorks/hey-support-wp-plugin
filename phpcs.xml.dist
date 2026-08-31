@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<ruleset name="Hey Support">
+	<description>WordPress Coding Standards for the Hey Support plugin.</description>
+
+	<file>.</file>
+	<exclude-pattern>/vendor/</exclude-pattern>
+	<exclude-pattern>/node_modules/</exclude-pattern>
+	<exclude-pattern>/.wordpress-org/</exclude-pattern>
+
+	<arg name="extensions" value="php"/>
+	<arg name="colors"/>
+	<arg value="sp"/>
+
+	<rule ref="WordPress">
+		<!-- The project ships ASCII punctuation deliberately; this sniff is
+		     about something else entirely and fires on legitimate prose. -->
+		<exclude name="WordPress.WP.I18n.NonSingularStringLiteralText"/>
+	</rule>
+
+	<config name="minimum_wp_version" value="6.5"/>
+	<config name="testVersion" value="7.4-"/>
+
+	<rule ref="WordPress.WP.I18n">
+		<properties>
+			<property name="text_domain" type="array" value="hey-support-ai-chatbot"/>
+		</properties>
+	</rule>
+
+	<!-- Every global function, constant, hook and option in this plugin is
+	     prefixed hey_support / HEY_SUPPORT. The one exception is DONOTCACHEPAGE,
+	     which is not ours to name -- it carries its own phpcs:ignore. -->
+	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
+		<properties>
+			<property name="prefixes" type="array" value="hey_support,HEY_SUPPORT"/>
+		</properties>
+	</rule>
+</ruleset>

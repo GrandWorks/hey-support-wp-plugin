@@ -1,0 +1,21 @@
+# Everything here is stripped before the SVN deploy. The deploy action also
+# excludes .git*/.distignore itself, so none of this reaches the zip WP.org
+# serves -- which is why a .distignore at the repo ROOT is safe, unlike one
+# inside a plugin folder (Plugin Check reports any hidden file there as an
+# ERROR).
+.git
+.github
+.gitignore
+.distignore
+.editorconfig
+.wordpress-org
+ARCHITECTURE.md
+README.md
+composer.json
+composer.lock
+phpcs.xml.dist
+vendor
+node_modules
+*.zip
+*.log
+.DS_Store

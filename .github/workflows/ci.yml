@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  lint-php:
+    name: PHP ${{ matrix.php }} syntax
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # 7.4 is the declared floor (Requires PHP), 8.3 the realistic ceiling.
+        php: ['7.4', '8.0', '8.1', '8.2', '8.3']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+      - name: Lint every PHP file
+        run: find . -path ./vendor -prune -o -name '*.php' -print0 | xargs -0 -n1 -P4 php -l
+
+  coding-standards:
+    name: PHPCS / WPCS
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: none
+          tools: composer
+      - run: composer install --no-interaction --prefer-dist
+      - run: composer run lint
+
+  plugin-check:
+    name: WordPress Plugin Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # The approval email tells us to keep checking with PHPCS+WPCS and Plugin
+      # Check. Plugin Check is what would have caught the block-name defect that
+      # got 1.0.0 rejected, so it runs on every PR rather than before a release.
+      - uses: wordpress/plugin-check-action@v1
+        with:
+          build-dir: './'
+
+  ascii-punctuation:
+    name: ASCII punctuation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # Smart quotes and em dashes have leaked in three times, and they reach
+      # translators and the WP.org listing. Cheaper to fail here than to sweep.
+      - name: Fail on non-ASCII in shipped code
+        run: |
+          if grep -rnP '[^\x00-\x7F]' --include='*.php' --include='*.js' \
+               --include='*.json' --include='*.txt' . ; then
+            echo "::error::Non-ASCII characters found in shipped files."
+            exit 1
+          fi
+          echo "clean"
