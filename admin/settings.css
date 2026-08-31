@@ -159,6 +159,15 @@
 	display: inline;
 }
 
+/* Carries only hidden inputs; its submit button lives up in Advanced and reaches
+   it through the `form` attribute. Not display:none -- a hidden form still
+   submits, but keeping it out of the layout without removing it from the a11y
+   tree is the cheaper guarantee. */
+.hs-offscreen-form {
+	height: 0;
+	overflow: hidden;
+}
+
 /* -- Cards --------------------------------------------------------------- */
 
 .hs-card {

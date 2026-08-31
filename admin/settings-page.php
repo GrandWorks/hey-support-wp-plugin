@@ -230,6 +230,13 @@ function hey_support_render_settings_page(): void {
 					</span>
 				</div>
 			</form>
+
+			<?php // Sibling of the settings form, never a child of it. See the Disconnect button. ?>
+			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>"
+				id="hs-disconnect-form" class="hs-offscreen-form">
+				<input type="hidden" name="action" value="hey_support_disconnect" />
+				<?php wp_nonce_field( 'hey_support_disconnect' ); ?>
+			</form>
 		<?php endif; ?>
 	</div>
 	<?php
@@ -580,13 +587,19 @@ function hey_support_render_advanced_card( array $opts ): void {
 				<div class="hs-field hs-danger">
 					<span class="hs-label"><?php esc_html_e( 'Disconnect', 'hey-support-ai-chatbot' ); ?></span>
 					<p class="hs-help"><?php esc_html_e( 'Unlink this site from the agent and stop showing the chat widget. Your conversations, leads and settings in Hey Support are untouched, and you can connect again at any time.', 'hey-support-ai-chatbot' ); ?></p>
-					<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="hs-inline-form">
-						<input type="hidden" name="action" value="hey_support_disconnect" />
-						<?php wp_nonce_field( 'hey_support_disconnect' ); ?>
-						<button type="submit" class="button hs-disconnect">
-							<?php esc_html_e( 'Disconnect this site', 'hey-support-ai-chatbot' ); ?>
-						</button>
-					</form>
+					<?php
+					// Points at a form rendered AFTER the settings form, via the
+					// HTML5 `form` attribute. Nesting one form inside another is
+					// invalid, and browsers do not merely tolerate it -- the
+					// parser DROPS the inner <form> tag and reparents its
+					// children, so this button silently became part of the
+					// options.php form. Pressing Disconnect would have saved
+					// settings instead, while smuggling a stray `action` field
+					// into that submission.
+					?>
+					<button type="submit" form="hs-disconnect-form" class="button hs-disconnect">
+						<?php esc_html_e( 'Disconnect this site', 'hey-support-ai-chatbot' ); ?>
+					</button>
 				</div>
 			</div>
 		</details>
