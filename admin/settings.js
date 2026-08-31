@@ -5,147 +5,186 @@
 	var OK_COLOR = '#1f7a1f';
 	var ERR_COLOR = '#b3341d';
 
-	function postAjax(action, payload) {
-		return $.post(heySupportAdmin.ajaxUrl, $.extend({
-			action: action,
-			nonce: heySupportAdmin.nonce
-		}, payload));
-	}
-
-	/**
-	 * Map an API failure onto operator-facing copy.
-	 *
-	 * 403 is NOT a bad token: the Hey Support public API is gated to the Scale
-	 * plan, so most installs get one with a perfectly valid key. Reporting that
-	 * as "Invalid token" sent people off minting new keys that also failed.
-	 */
-	function failureMessage(status) {
-		if (status === 403) { return heySupportAdmin.i18n.planGate; }
-		if (status === 429) { return heySupportAdmin.i18n.rateLimited; }
-		if (status === 0) { return heySupportAdmin.i18n.networkErr; }
-		return heySupportAdmin.i18n.invalidToken;
-	}
-
-	function statusOf(resp) {
-		return resp && resp.data && typeof resp.data.status === 'number' ? resp.data.status : null;
-	}
-
-	/** Server-named failures win over status-code guessing. */
-	function codeOf(resp) {
-		return resp && resp.data && typeof resp.data.code === 'string' ? resp.data.code : null;
-	}
-
-	function errorFor(resp) {
-		if (codeOf(resp) === 'no_token') { return heySupportAdmin.i18n.noToken; }
-		return failureMessage(statusOf(resp));
-	}
-
 	$(function () {
-		var $verifyBtn = $('#hey-support-ai-chatbot-verify');
-		var $verifyResult = $('#hey-support-ai-chatbot-verify-result');
-		var $tokenInput = $('#hey_support_api_token');
-		var $refreshBtn = $('#hey-support-ai-chatbot-refresh-chatbots');
-		var $chatbotInput = $('#hey_support_chatbot_id');
+		initManualToggle();
+		initExcludePicker();
+		initStorefrontCheck();
+	});
 
-		function report(msg, ok) {
-			$verifyResult.css('color', ok ? OK_COLOR : ERR_COLOR).text(msg);
+	// --- "I have a chatbot ID" -------------------------------------------
+	// Progressive disclosure rather than a second card: the manual path is a
+	// fallback for local sites Hey Support cannot reach, and showing it beside
+	// the primary action is what made the old screen read as two equal choices.
+	function initManualToggle() {
+		var $toggle = $('.hs-manual-toggle');
+		var $panel = $('.hs-manual');
+		if (!$toggle.length || !$panel.length) { return; }
+
+		$toggle.on('click', function (e) {
+			e.preventDefault();
+			var open = $panel.is('[hidden]');
+			$panel.prop('hidden', !open);
+			$toggle.attr('aria-expanded', open ? 'true' : 'false');
+			if (open) { $panel.find('input[type="text"]').trigger('focus'); }
+		});
+	}
+
+	// --- Exclude-by-name picker -------------------------------------------
+	// Replaces a textarea that asked for comma-separated post IDs, something
+	// WordPress never shows anyone -- so the only way to comply was to go
+	// hunting in URLs. The STORED value is still a comma-separated ID list, so
+	// the option shape is unchanged and no migration was needed.
+	//
+	// Deliberately vanilla against /wp/v2/search rather than wp.components'
+	// FormTokenField: this is a settings screen, and pulling in the block editor
+	// component bundle to render a few chips would be the heavier half of the
+	// page by a wide margin.
+	function initExcludePicker() {
+		var $ids = $('#hey-support-exclude-ids');
+		var $chips = $('#hey-support-chips');
+		var $search = $('#hey-support-exclude-search');
+		var $results = $('#hey-support-results');
+		if (!$ids.length || !$search.length) { return; }
+
+		// Titles are resolved server-side: /wp/v2/search has no include= filter,
+		// so the client cannot turn saved IDs back into names on its own.
+		var chosen = (heySupportAdmin.excluded || []).slice();
+		var timer = null;
+		var lastQuery = '';
+
+		function sync() {
+			$ids.val(chosen.map(function (c) { return c.id; }).join(','));
+			$chips.empty();
+			chosen.forEach(function (item) {
+				var $remove = $('<button type="button"></button>')
+					.attr('aria-label', heySupportAdmin.i18n.remove + ': ' + item.title)
+					.text('x')
+					.on('click', function () {
+						chosen = chosen.filter(function (c) { return c.id !== item.id; });
+						sync();
+						$search.trigger('focus');
+					});
+				$chips.append(
+					$('<li class="hs-chip"></li>')
+						.append($('<span></span>').text(item.title))
+						.append($remove)
+				);
+			});
 		}
 
-		$verifyBtn.on('click', function () {
-			// An empty field means "re-check the saved token", not "no token" - the
-			// field is write-only and always renders empty. The server resolves it.
-			var token = String($tokenInput.val() || '').trim();
-			$verifyBtn.prop('disabled', true);
-			$verifyResult.text(heySupportAdmin.i18n.verifying).css('color', '');
+		function closeResults() {
+			$results.empty();
+			$search.attr('aria-expanded', 'false');
+		}
 
-			postAjax('hey_support_verify_token', { token: token })
-				.done(function (resp) {
-					$verifyBtn.prop('disabled', false);
-					if (resp && resp.success && resp.data) {
-						report(
-							heySupportAdmin.i18n.connectedTo + ' ' +
-							(resp.data.team_name || '') +
-							(resp.data.key_name ? ' - ' + resp.data.key_name : ''),
-							true
-						);
-						return;
-					}
-					report(errorFor(resp), false);
+		function add(item) {
+			if (!chosen.some(function (c) { return c.id === item.id; })) {
+				chosen.push(item);
+				sync();
+			}
+			$search.val('');
+			lastQuery = '';
+			closeResults();
+			$search.trigger('focus');
+		}
+
+		function render(items) {
+			$results.empty();
+			if (!items.length) {
+				$results.append(
+					$('<li></li>').append(
+						$('<button type="button" disabled></button>').text(heySupportAdmin.i18n.noResults)
+					)
+				);
+				$search.attr('aria-expanded', 'true');
+				return;
+			}
+			items.forEach(function (item) {
+				var $btn = $('<button type="button" role="option"></button>')
+					.append($('<span></span>').text(item.title))
+					.append($('<span class="hs-result-type"></span>').text(item.subtype || ''))
+					.on('click', function () { add({ id: item.id, title: item.title }); });
+				$results.append($('<li></li>').append($btn));
+			});
+			$search.attr('aria-expanded', 'true');
+		}
+
+		function search(query) {
+			$.ajax({
+				url: heySupportAdmin.restUrl + '?search=' + encodeURIComponent(query) + '&per_page=8',
+				headers: { 'X-WP-Nonce': heySupportAdmin.restNonce }
+			})
+				.done(function (rows) {
+					if (!Array.isArray(rows)) { closeResults(); return; }
+					render(
+						rows.map(function (r) {
+							// The search endpoint returns rendered titles, which
+							// can carry HTML entities. .text() puts them back.
+							return {
+								id: parseInt(r.id, 10),
+								title: $('<div></div>').html(r.title || '').text() || String(r.id),
+								subtype: r.subtype || ''
+							};
+						})
+					);
 				})
-				.fail(function () {
-					$verifyBtn.prop('disabled', false);
-					report(heySupportAdmin.i18n.networkErr, false);
-				});
+				.fail(function () { closeResults(); });
+		}
+
+		$search.on('input', function () {
+			var query = $.trim(String($search.val() || ''));
+			if (timer) { clearTimeout(timer); }
+			if (query.length < 2) { closeResults(); return; }
+			if (query === lastQuery) { return; }
+			lastQuery = query;
+			timer = setTimeout(function () { search(query); }, 250);
 		});
 
-		$refreshBtn.on('click', function () {
-			// Empty means "use the saved token" - see the Verify handler above.
-			var token = String($tokenInput.val() || '').trim();
-			$refreshBtn.prop('disabled', true).text(heySupportAdmin.i18n.refreshing);
-
-			postAjax('hey_support_refresh_chatbots', { token: token })
-				.done(function (resp) {
-					$refreshBtn.prop('disabled', false).text(heySupportAdmin.i18n.refreshLabel);
-					if (!resp || !resp.success || !resp.data || !Array.isArray(resp.data.chatbots)) {
-						report(errorFor(resp), false);
-						return;
-					}
-					var bots = resp.data.chatbots;
-					if (!bots.length) {
-						report(heySupportAdmin.i18n.noChatbots, false);
-						return;
-					}
-					var current = String($chatbotInput.val() || '');
-					var $select = $('<select></select>')
-						.attr('id', $chatbotInput.attr('id'))
-						.attr('name', $chatbotInput.attr('name'))
-						.addClass('regular-text');
-					bots.forEach(function (b) {
-						$select.append(
-							$('<option></option>')
-								.val(b.id)
-								.text(b.name + ' (' + b.id + ')')
-								.prop('selected', b.id === current)
-						);
-					});
-					$chatbotInput.replaceWith($select);
-					$chatbotInput = $select;
-				})
-				.fail(function () {
-					$refreshBtn.prop('disabled', false).text(heySupportAdmin.i18n.refreshLabel);
-					report(heySupportAdmin.i18n.networkErr, false);
-				});
+		$search.on('keydown', function (e) {
+			if (e.key === 'Escape') { closeResults(); }
+			// This sits inside the settings form: Enter in a search box must not
+			// submit it.
+			if (e.key === 'Enter') { e.preventDefault(); }
 		});
 
-		// --- Storefront self-check ------------------------------------------
-		// Asks THIS site whether its own Store API answers. WordPress fails in a
-		// few very specific ways and each has a one-minute fix right here in
-		// wp-admin, so naming the cause beats a generic "could not connect".
-		var $storefrontBtn = $('#hey-support-storefront-test');
-		var $storefrontOut = $('#hey-support-storefront-result');
+		$(document).on('click', function (e) {
+			if (!$(e.target).closest('.hs-picker').length) { closeResults(); }
+		});
 
-		$storefrontBtn.on('click', function () {
-			var label = $storefrontBtn.text();
-			$storefrontBtn.prop('disabled', true);
-			$storefrontOut.removeClass('notice notice-error notice-success').text('');
+		sync();
+	}
+
+	// --- Storefront self-check ---------------------------------------------
+	// Asks THIS site whether its own Store API answers. WordPress fails in a few
+	// very specific ways and each has a one-minute fix right here in wp-admin,
+	// so naming the cause beats a generic "could not connect".
+	function initStorefrontCheck() {
+		var $btn = $('#hey-support-storefront-test');
+		var $out = $('#hey-support-storefront-result');
+		if (!$btn.length) { return; }
+
+		$btn.on('click', function () {
+			var label = $btn.text();
+			$btn.prop('disabled', true);
+			$out.text('');
 
 			$.post(heySupportAdmin.ajaxUrl, {
 				action: 'hey_support_storefront_test',
 				nonce: heySupportAdmin.nonce
 			})
 				.done(function (resp) {
-					$storefrontBtn.prop('disabled', false).text(label);
+					$btn.prop('disabled', false).text(label);
 					var data = (resp && resp.data) || {};
 					var msg = data.message || '';
 					if (resp && resp.success) {
-						$storefrontOut.text(msg).css('color', OK_COLOR);
+						$out.text(msg).css('color', OK_COLOR);
 						return;
 					}
-					$storefrontOut.text(msg).css('color', ERR_COLOR);
-					// A 404 is almost always Plain permalinks - link straight to the
-					// screen that fixes it rather than describing where it lives.
+					$out.text(msg).css('color', ERR_COLOR);
+					// A 404 is almost always Plain permalinks - link straight to
+					// the screen that fixes it rather than describing where it is.
 					if (data.permalinkUrl) {
-						$storefrontOut.append(
+						$out.append(
 							$('<a></a>')
 								.attr('href', data.permalinkUrl)
 								.text(' ' + heySupportAdmin.i18n.permalinks)
@@ -153,9 +192,9 @@
 					}
 				})
 				.fail(function () {
-					$storefrontBtn.prop('disabled', false).text(label);
-					$storefrontOut.text(heySupportAdmin.i18n.networkErr).css('color', ERR_COLOR);
+					$btn.prop('disabled', false).text(label);
+					$out.text(heySupportAdmin.i18n.networkErr).css('color', ERR_COLOR);
 				});
 		});
-	});
+	}
 }(jQuery));

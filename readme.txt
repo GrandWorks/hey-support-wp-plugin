@@ -4,7 +4,7 @@ Tags: ai, chatbot, live-chat, customer-service, woocommerce
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.1.0
+Stable tag: 2.0.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -16,8 +16,8 @@ Hey Support is a hosted AI chatbot built for small and mid-size businesses. Trai
 
 This plugin embeds the widget on any WordPress site in two clicks:
 
-1. Paste your chatbot ID under **Settings > Hey Support**.
-2. Save. The widget appears on every page.
+1. Press **Connect to Hey Support** under **Settings > Hey Support**.
+2. Pick your agent. The widget appears on every page.
 
 **This plugin requires a Hey Support account.** Hey Support is a paid third-party service with a free tier; the chatbot cannot work without it, because replies are generated on Hey Support's servers. Sign up at https://hey.support and see the "External services" section below for exactly what is sent and when.
 
@@ -68,9 +68,16 @@ The plugin communicates with Hey Support in the following ways:
   store URL and currency, the current cart total and item count, and - only when
   the shopper is logged in - the customer ID, customer email, and last order ID
   and status, so the chatbot can answer order- and cart-related questions.
-* Admin actions: when you click "Verify token" or refresh the chatbot list in
-  the plugin settings, your workspace API token is sent to Hey Support's
-  /v1/me and /v1/chatbots endpoints to authenticate and list your chatbots.
+* Connecting your agent: when you press "Connect to Hey Support", your site
+  address, site name and whether WooCommerce is active are sent to Hey Support
+  so it can show you your agents and confirm which site is being connected. Hey
+  Support then makes one request back to your site to confirm the connection
+  started here, and your server makes one request to Hey Support to complete it.
+  No account credentials are involved, and the only thing stored on your site as
+  a result is your public chatbot ID.
+* Checking your store: when you click "Check my store is reachable", your own
+  site is asked whether its WooCommerce Store API answers. That request does not
+  leave your server.
 
 Data is sent to Hey Support when the widget loads, when a visitor interacts with
 the chatbot, or when you perform the admin actions above.
@@ -83,11 +90,12 @@ Hey Support's policies:
 
 == Installation ==
 
-1. Upload the `hey-support-ai-chatbot` folder to `/wp-content/plugins/`, or install through the WordPress Plugins screen.
+1. Install through the WordPress Plugins screen, or upload the `hey-support-ai-chatbot` folder to `/wp-content/plugins/`.
 2. Activate the plugin.
-3. Go to **Settings > Hey Support**.
-4. Paste your chatbot ID.
-5. Save changes. The widget appears on the front-end immediately.
+3. Go to **Settings > Hey Support** and press **Connect to Hey Support**.
+4. Pick the agent you want on this site. You land back here connected.
+
+There is no ID to find and nothing to paste. If Hey Support cannot reach your site, which is normally only true of local development installs, you can enter a chatbot ID by hand instead.
 
 == Frequently Asked Questions ==
 
@@ -131,12 +139,22 @@ Yes. Sign up at https://hey.support and start on the Free plan. Paid plans are o
 
 == Screenshots ==
 
-1. Widget rendered in the bottom-right corner of a WordPress page.
-2. Settings > Hey Support admin screen with the chatbot ID field.
-3. Verify token feedback showing the connected workspace.
-4. Hey Support block in the Gutenberg editor.
+1. Settings > Hey Support after connecting, showing where the widget appears.
+2. The connect screen before an agent is chosen.
+3. Choosing an agent on Hey Support.
+4. Hiding the widget on chosen pages, by name.
+5. Store settings, with live products in chat.
+6. The Hey Support block in the editor.
 
 == Changelog ==
+
+= 2.0.0 =
+* One-click connect. Press Connect, pick your agent on Hey Support, and land back here connected. No chatbot ID to find and nothing to paste, on every plan.
+* Rebuilt the settings screen. Before you connect it asks one thing; afterwards it shows where the widget appears, your store, and an Advanced section for everything else.
+* "Hide on these post IDs" is now a search-by-name picker. WordPress never showed you post IDs, so finding them meant hunting through URLs. Your existing choices are kept exactly as they were.
+* Removed the workspace API token field. Connecting replaced both things it did, and it only ever worked on the Scale plan.
+* Added a Settings link on the Plugins screen, documentation and support links, and a reminder if the plugin is installed but not connected.
+* Fixed: an expired connect link no longer reports that the plugin is missing.
 
 = 1.1.0 =
 * New "Live products in chat" setting: connect this store's public catalogue so the chatbot can show real products, prices, and stock, and add them to the shopper's cart.
@@ -153,6 +171,9 @@ Yes. Sign up at https://hey.support and start on the Free plan. Paid plans are o
 * Verify-token and refresh-chatbot-list helpers for workspaces on plans that include public API access.
 
 == Upgrade Notice ==
+
+= 2.0.0 =
+Connecting is now one click: press Connect and pick your agent. Your existing settings, including which pages the widget is hidden on, are kept.
 
 = 1.1.0 =
 Live products in chat for WooCommerce, a one-approval AI Actions connection, and a store reachability check. Fixes an admin script that could stay cached from 1.0.0.

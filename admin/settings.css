@@ -1,0 +1,264 @@
+/*
+ * Settings screen.
+ *
+ * Native WordPress chrome with restrained brand: WP's own controls, spacing and
+ * colours, arranged as cards instead of a form-table. A full re-skin would fight
+ * the admin theme, break under the eight admin colour schemes, and is exactly
+ * what plugin reviewers dislike -- so the only brand moments here are the mark
+ * in the header and the live dot.
+ *
+ * Colours come from WP's own CSS variables where they exist, so alternate admin
+ * colour schemes keep working.
+ */
+
+.hs-wrap {
+	max-width: 760px;
+}
+
+.hs-head {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin: 8px 0 4px;
+}
+
+.hs-head svg {
+	display: block;
+}
+
+.hs-sub {
+	margin: 0 0 20px;
+	color: #646970;
+	font-size: 13px;
+}
+
+/* -- Cards --------------------------------------------------------------- */
+
+.hs-card {
+	background: #fff;
+	border: 1px solid #dcdcde;
+	border-radius: 8px;
+	padding: 20px 22px;
+	margin-bottom: 16px;
+}
+
+.hs-card h2 {
+	margin: 0 0 4px;
+	font-size: 14px;
+	font-weight: 600;
+	line-height: 1.4;
+}
+
+.hs-card .hs-card-desc {
+	margin: 0 0 16px;
+	color: #646970;
+	font-size: 13px;
+	line-height: 1.6;
+}
+
+.hs-card .hs-card-desc:last-child {
+	margin-bottom: 0;
+}
+
+/* -- The connect card (first run) ----------------------------------------- */
+
+.hs-connect {
+	text-align: center;
+	padding: 34px 24px 30px;
+}
+
+.hs-connect h2 {
+	font-size: 18px;
+	font-weight: 600;
+	margin-bottom: 6px;
+}
+
+.hs-connect .hs-card-desc {
+	max-width: 40em;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.hs-connect .button {
+	min-height: 36px;
+	padding: 0 22px;
+}
+
+/* -- Connected header ---------------------------------------------------- */
+
+.hs-status {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex-wrap: wrap;
+}
+
+.hs-dot {
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background: #2f8f50;
+	flex: none;
+}
+
+.hs-status-name {
+	font-weight: 600;
+	font-size: 14px;
+}
+
+.hs-status-meta {
+	color: #646970;
+	font-size: 13px;
+}
+
+.hs-status-actions {
+	margin-left: auto;
+	display: flex;
+	gap: 8px;
+}
+
+/* -- Token chips (the page picker) --------------------------------------- */
+
+.hs-chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	margin: 0 0 8px;
+	padding: 0;
+	list-style: none;
+}
+
+.hs-chips:empty {
+	margin: 0;
+}
+
+.hs-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	background: #f0f0f1;
+	border: 1px solid #dcdcde;
+	border-radius: 4px;
+	padding: 3px 6px 3px 10px;
+	font-size: 13px;
+	line-height: 1.5;
+	max-width: 100%;
+}
+
+.hs-chip span {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.hs-chip button {
+	border: 0;
+	background: transparent;
+	cursor: pointer;
+	padding: 0 2px;
+	color: #646970;
+	font-size: 15px;
+	line-height: 1;
+}
+
+.hs-chip button:hover,
+.hs-chip button:focus {
+	color: #b32d2e;
+}
+
+.hs-picker {
+	position: relative;
+	max-width: 420px;
+}
+
+.hs-picker input[type='text'] {
+	width: 100%;
+}
+
+.hs-results {
+	position: absolute;
+	z-index: 10;
+	left: 0;
+	right: 0;
+	top: 100%;
+	margin: 2px 0 0;
+	padding: 0;
+	list-style: none;
+	background: #fff;
+	border: 1px solid #dcdcde;
+	border-radius: 4px;
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+	max-height: 240px;
+	overflow-y: auto;
+}
+
+.hs-results:empty {
+	display: none;
+}
+
+.hs-results li button {
+	display: block;
+	width: 100%;
+	text-align: left;
+	border: 0;
+	background: transparent;
+	padding: 7px 10px;
+	cursor: pointer;
+	font-size: 13px;
+	line-height: 1.5;
+}
+
+.hs-results li button:hover,
+.hs-results li button:focus,
+.hs-results li button[aria-selected='true'] {
+	background: #f0f0f1;
+}
+
+.hs-results .hs-result-type {
+	color: #646970;
+	font-size: 12px;
+	margin-left: 6px;
+}
+
+/* -- Advanced ------------------------------------------------------------ */
+
+.hs-advanced summary {
+	cursor: pointer;
+	font-size: 13px;
+	font-weight: 600;
+	padding: 4px 0;
+}
+
+.hs-advanced[open] summary {
+	margin-bottom: 14px;
+}
+
+.hs-field {
+	margin-bottom: 16px;
+}
+
+.hs-field:last-child {
+	margin-bottom: 0;
+}
+
+.hs-field label {
+	display: block;
+	font-weight: 600;
+	font-size: 13px;
+	margin-bottom: 4px;
+}
+
+.hs-field .description {
+	margin-top: 4px;
+}
+
+.hs-radio {
+	display: block;
+	margin-bottom: 6px;
+	font-size: 13px;
+}
+
+.hs-inline-note {
+	font-size: 13px;
+	color: #646970;
+}

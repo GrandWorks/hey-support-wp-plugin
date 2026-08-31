@@ -5,10 +5,11 @@
  * Single serialized array under the `hey_support_settings` wp_options key, so
  * uninstall is one row to clean.
  *
- * The API token is never echoed back into the settings HTML (see
- * admin/settings-page.php). It is write-only from the form's point of view: an
- * empty submission preserves whatever is stored, and clearing requires the
- * explicit checkbox. Encrypt-at-rest remains a v1.1 item.
+ * `api_token` no longer has any UI: one-click connect replaced both things it
+ * did, and it was gated to the Scale plan so it advertised a capability most
+ * people could never use. The key stays in the shape and the sanitizer still
+ * preserves it, because silently destroying a stored credential on upgrade is
+ * not ours to do -- it is simply never rendered or read.
  *
  * @package HeySupport
  */
@@ -49,20 +50,6 @@ function hey_support_get_options(): array {
 		$saved = [];
 	}
 	return array_merge( hey_support_default_options(), $saved );
-}
-
-/**
- * Short, non-reversible hint for a stored token, mirroring the
- * `key_prefix_display` the Hey Support dashboard shows ("hs_live_" + 4 chars).
- */
-function hey_support_mask_token( string $token ): string {
-	if ( '' === $token ) {
-		return '';
-	}
-	if ( strlen( $token ) <= 12 ) {
-		return str_repeat( '*', strlen( $token ) );
-	}
-	return substr( $token, 0, 12 ) . '...';
 }
 
 /**

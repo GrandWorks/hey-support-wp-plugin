@@ -74,7 +74,7 @@ jobs:
       - name: Fail on non-ASCII in shipped code
         run: |
           if grep -rnP '[^\x00-\x7F]' --include='*.php' --include='*.js' \
-               --include='*.json' --include='*.txt' \
+               --include='*.css' --include='*.json' --include='*.txt' \
                --exclude-dir=vendor --exclude-dir=node_modules . ; then
             echo "::error::Non-ASCII characters found in shipped files."
             exit 1
