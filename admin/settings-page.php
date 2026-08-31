@@ -223,10 +223,10 @@ function hey_support_render_settings_page(): void {
 						<fieldset>
 							<?php
 							$choices = [
-								'all'             => __( 'All pages and posts', 'hey-support-ai-chatbot' ),
-								'posts'           => __( 'Posts only', 'hey-support-ai-chatbot' ),
-								'pages'           => __( 'Pages only', 'hey-support-ai-chatbot' ),
-								'shortcode-only'  => __( 'Only where [hey_support] shortcode or block is used', 'hey-support-ai-chatbot' ),
+								'all'            => __( 'All pages and posts', 'hey-support-ai-chatbot' ),
+								'posts'          => __( 'Posts only', 'hey-support-ai-chatbot' ),
+								'pages'          => __( 'Pages only', 'hey-support-ai-chatbot' ),
+								'shortcode-only' => __( 'Only where [hey_support] shortcode or block is used', 'hey-support-ai-chatbot' ),
 							];
 							foreach ( $choices as $value => $label ) :
 								?>

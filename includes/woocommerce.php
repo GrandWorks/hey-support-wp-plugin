@@ -75,6 +75,9 @@ function hey_support_woo_cache_guard(): void {
  * @param array<string, mixed> $overrides Per-shortcode overrides (unused here).
  * @return array<string, mixed>
  */
+// Filter signature: registered with add_filter( ..., 10, 2 ), so the second
+// parameter has to exist whether or not this callback reads it.
+// phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed
 function hey_support_woocommerce_context( $context, $overrides = [] ): array {
 	if ( ! is_array( $context ) ) {
 		$context = [];

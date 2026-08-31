@@ -11,10 +11,20 @@
 	<arg name="colors"/>
 	<arg value="sp"/>
 
-	<rule ref="WordPress">
-		<!-- The project ships ASCII punctuation deliberately; this sniff is
-		     about something else entirely and fires on legitimate prose. -->
-		<exclude name="WordPress.WP.I18n.NonSingularStringLiteralText"/>
+	<!--
+		WordPress-Extra includes WordPress-Core, so this is every correctness and
+		security sniff WPCS ships. WordPress-Docs is deliberately NOT included:
+		it is inline-documentation house style, while the sniffs that actually
+		matter here (nonce verification, escaping, sanitization, SSRF, enqueued
+		resource parameters) all live in Core and Extra.
+	-->
+	<rule ref="WordPress-Extra">
+		<!--
+			This plugin has used short array syntax since its first line and
+			shipped through a WordPress.org review that way. Rewriting 56 call
+			sites to array() buys nothing and would bury real changes in noise.
+		-->
+		<exclude name="Universal.Arrays.DisallowShortArraySyntax"/>
 	</rule>
 
 	<config name="minimum_wp_version" value="6.5"/>
@@ -22,16 +32,31 @@
 
 	<rule ref="WordPress.WP.I18n">
 		<properties>
-			<property name="text_domain" type="array" value="hey-support-ai-chatbot"/>
+			<property name="text_domain" type="array">
+				<element value="hey-support-ai-chatbot"/>
+			</property>
 		</properties>
 	</rule>
 
-	<!-- Every global function, constant, hook and option in this plugin is
-	     prefixed hey_support / HEY_SUPPORT. The one exception is DONOTCACHEPAGE,
-	     which is not ours to name -- it carries its own phpcs:ignore. -->
+	<!--
+		Every global function, constant, hook and option here is prefixed
+		hey_support / HEY_SUPPORT. The one exception is DONOTCACHEPAGE, which is
+		not ours to name; it carries its own phpcs:ignore.
+	-->
 	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
 		<properties>
-			<property name="prefixes" type="array" value="hey_support,HEY_SUPPORT"/>
+			<property name="prefixes" type="array">
+				<element value="hey_support"/>
+				<element value="HEY_SUPPORT"/>
+			</property>
 		</properties>
+	</rule>
+
+	<!--
+		index.asset.php is the filename WordPress itself looks for beside a
+		block's editorScript. The hyphenation sniff cannot know that.
+	-->
+	<rule ref="WordPress.Files.FileName">
+		<exclude-pattern>*/blocks/*/index.asset.php</exclude-pattern>
 	</rule>
 </ruleset>

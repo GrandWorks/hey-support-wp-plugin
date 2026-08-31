@@ -44,12 +44,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      # Check what SHIPS, not what is in the repo. Plugin Check reports any
+      # hidden file inside a plugin directory as an ERROR, so pointing it at the
+      # repo root would fail on .github, .distignore and .editorconfig -- the
+      # very scaffolding that makes this repo maintainable. Mirror what the
+      # deploy action does: build a clean directory from .distignore first.
+      - name: Assemble the shipping plugin
+        run: |
+          mkdir -p build/hey-support-ai-chatbot
+          rsync -a --exclude-from=.distignore ./ build/hey-support-ai-chatbot/
+          echo "--- shipping tree ---"
+          find build/hey-support-ai-chatbot -type f | sort
+
       # The approval email tells us to keep checking with PHPCS+WPCS and Plugin
       # Check. Plugin Check is what would have caught the block-name defect that
       # got 1.0.0 rejected, so it runs on every PR rather than before a release.
       - uses: wordpress/plugin-check-action@v1
         with:
-          build-dir: './'
+          build-dir: './build/hey-support-ai-chatbot'
 
   ascii-punctuation:
     name: ASCII punctuation
@@ -61,7 +74,8 @@ jobs:
       - name: Fail on non-ASCII in shipped code
         run: |
           if grep -rnP '[^\x00-\x7F]' --include='*.php' --include='*.js' \
-               --include='*.json' --include='*.txt' . ; then
+               --include='*.json' --include='*.txt' \
+               --exclude-dir=vendor --exclude-dir=node_modules . ; then
             echo "::error::Non-ASCII characters found in shipped files."
             exit 1
           fi

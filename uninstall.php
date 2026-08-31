@@ -22,7 +22,12 @@ function hey_support_uninstall_cleanup(): void {
 		return;
 	}
 
-	foreach ( get_sites( [ 'fields' => 'ids', 'number' => 0 ] ) as $site_id ) {
+	foreach ( get_sites(
+		[
+			'fields' => 'ids',
+			'number' => 0,
+		]
+	) as $site_id ) {
 		switch_to_blog( (int) $site_id );
 		delete_option( $option );
 		restore_current_blog();

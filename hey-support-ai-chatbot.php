@@ -34,6 +34,9 @@ if ( is_admin() ) {
 	require_once HEY_SUPPORT_DIR . 'admin/settings-page.php';
 }
 
-register_activation_hook( __FILE__, function () {
-	hey_support_seed_default_options();
-} );
+register_activation_hook(
+	__FILE__,
+	function () {
+		hey_support_seed_default_options();
+	}
+);

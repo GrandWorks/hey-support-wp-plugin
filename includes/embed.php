@@ -54,7 +54,8 @@ function hey_support_already_rendered(): bool {
  * it doesn't fatal.
  */
 function hey_support_mark_rendered(): void {
-	return;
+	// Kept so the body is unmistakably an intentional no-op, not a stub.
+	return; // phpcs:ignore Squiz.PHP.NonExecutableCode.ReturnNotRequired
 }
 
 /**
@@ -102,12 +103,19 @@ function hey_support_footer_embed(): void {
 		return;
 	}
 
-	// phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion -- Deliberate: this is a remote endpoint on hey.support, which ships widget updates on its own cadence behind its own Cache-Control headers. Pinning ?ver= to the PLUGIN version would both bust the cache on unrelated plugin releases and fail to bust it when the widget itself changes.
 	wp_enqueue_script(
 		HEY_SUPPORT_EMBED_HANDLE,
 		HEY_SUPPORT_API_BASE . '/api/chat/embed.js',
 		[],
-		null,
+		// A remote endpoint on hey.support, which ships widget updates on its own
+		// cadence behind its own Cache-Control headers. `null` means no ?ver= is
+		// appended at all; pinning it to the PLUGIN version would bust the CDN
+		// cache on unrelated plugin releases AND fail to bust it when the widget
+		// itself changes. The ignore must sit on THIS line: phpcs reports the
+		// violation at the argument, and an annotation above the call covers only
+		// the next line, so the old placement silently suppressed nothing -- which
+		// is how this argument came to be 'fixed' the wrong way once already.
+		null, // phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion
 		[
 			'in_footer' => true,
 			'strategy'  => 'defer',

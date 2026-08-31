@@ -24,11 +24,11 @@ const HEY_SUPPORT_OPTION_KEY = 'hey_support_settings';
  */
 function hey_support_default_options(): array {
 	return [
-		'api_token'      => '',
-		'chatbot_id'     => '',
-		'enable_on'      => 'all',     // all | posts | pages | shortcode-only
-		'exclude_ids'    => '',        // comma-separated post IDs
-		'auto_open'      => false,
+		'api_token'   => '',
+		'chatbot_id'  => '',
+		'enable_on'   => 'all',     // all | posts | pages | shortcode-only
+		'exclude_ids' => '',        // comma-separated post IDs
+		'auto_open'   => false,
 	];
 }
 
@@ -93,13 +93,13 @@ function hey_support_sanitize_options( $input ): array {
 
 	$out['chatbot_id'] = isset( $input['chatbot_id'] ) ? sanitize_text_field( $input['chatbot_id'] ) : '';
 
-	$enable_on = isset( $input['enable_on'] ) ? sanitize_text_field( $input['enable_on'] ) : 'all';
+	$enable_on        = isset( $input['enable_on'] ) ? sanitize_text_field( $input['enable_on'] ) : 'all';
 	$out['enable_on'] = in_array( $enable_on, [ 'all', 'posts', 'pages', 'shortcode-only' ], true ) ? $enable_on : 'all';
 
 	$out['auto_open'] = ! empty( $input['auto_open'] );
 
-	$raw_excludes = isset( $input['exclude_ids'] ) ? sanitize_textarea_field( $input['exclude_ids'] ) : '';
-	$ids          = array_filter( array_map( 'absint', preg_split( '/[\s,]+/', $raw_excludes ) ) );
+	$raw_excludes       = isset( $input['exclude_ids'] ) ? sanitize_textarea_field( $input['exclude_ids'] ) : '';
+	$ids                = array_filter( array_map( 'absint', preg_split( '/[\s,]+/', $raw_excludes ) ) );
 	$out['exclude_ids'] = implode( ',', array_unique( $ids ) );
 
 	return $out;
