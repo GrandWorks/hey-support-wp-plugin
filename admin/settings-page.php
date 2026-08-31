@@ -22,6 +22,7 @@ add_action( 'admin_init', 'hey_support_register_settings' );
 add_action( 'admin_enqueue_scripts', 'hey_support_admin_enqueue' );
 add_action( 'wp_ajax_hey_support_verify_token', 'hey_support_ajax_verify_token' );
 add_action( 'wp_ajax_hey_support_refresh_chatbots', 'hey_support_ajax_refresh_chatbots' );
+add_action( 'wp_ajax_hey_support_storefront_test', 'hey_support_ajax_storefront_test' );
 
 function hey_support_admin_menu(): void {
 	add_options_page(
@@ -72,6 +73,8 @@ function hey_support_admin_enqueue( string $hook ): void {
 				'rateLimited'  => __( 'Rate limited. Try again in a minute.', 'hey-support-ai-chatbot' ),
 				'networkErr'   => __( 'Network error. Check your connection and try again.', 'hey-support-ai-chatbot' ),
 				'noChatbots'   => __( 'No chatbots found for this workspace.', 'hey-support-ai-chatbot' ),
+				'noToken'      => __( 'Add your workspace API token first.', 'hey-support-ai-chatbot' ),
+				'permalinks'   => __( 'Open Permalinks settings', 'hey-support-ai-chatbot' ),
 			],
 		]
 	);
@@ -165,24 +168,45 @@ function hey_support_render_settings_page(): void {
 				</tr>
 
 				<tr>
+					<th scope="row"><?php esc_html_e( 'Live products in chat', 'hey-support-ai-chatbot' ); ?></th>
+					<td>
+						<?php if ( class_exists( 'WooCommerce' ) ) : ?>
+							<p class="description" style="margin-top:0;">
+								<?php esc_html_e( 'Let your chatbot show real products from this store, with live prices and stock, and add them to the shopper\'s cart. No API key needed - it reads your public store data.', 'hey-support-ai-chatbot' ); ?>
+							</p>
+							<p>
+								<button type="button" class="button" id="hey-support-storefront-test">
+									<?php esc_html_e( 'Check my store is reachable', 'hey-support-ai-chatbot' ); ?>
+								</button>
+								<a class="button button-primary" target="_blank" rel="noopener"
+									href="<?php echo esc_url( 'https://hey.support/dashboard?connect=woocommerce_storefront&site_url=' . rawurlencode( home_url() ) ); ?>">
+									<?php esc_html_e( 'Turn it on in Hey Support', 'hey-support-ai-chatbot' ); ?>
+								</a>
+							</p>
+							<p class="description" id="hey-support-storefront-result"></p>
+						<?php else : ?>
+							<p class="description" style="margin-top:0;">
+								<?php esc_html_e( 'WooCommerce is not active on this site. Install WooCommerce to show products in chat.', 'hey-support-ai-chatbot' ); ?>
+							</p>
+						<?php endif; ?>
+					</td>
+				</tr>
+
+				<tr>
 					<th scope="row"><?php esc_html_e( 'AI Actions (WooCommerce)', 'hey-support-ai-chatbot' ); ?></th>
 					<td>
 						<?php if ( class_exists( 'WooCommerce' ) ) : ?>
 							<p class="description" style="margin-top:0;">
-								<?php esc_html_e( 'Let your chatbot look up orders, update shipping, and issue coupons. Create a WooCommerce REST API key (Read/Write) and connect it to Hey Support.', 'hey-support-ai-chatbot' ); ?>
+								<?php esc_html_e( 'Let your chatbot look up orders, update shipping, and issue coupons. Approve it once in your own WooCommerce admin - the API key is created and sent for you.', 'hey-support-ai-chatbot' ); ?>
 							</p>
 							<p>
-								<a class="button" target="_blank" rel="noopener"
-									href="<?php echo esc_url( admin_url( 'admin.php?page=wc-settings&tab=advanced&section=keys' ) ); ?>">
-									<?php esc_html_e( '1. Create REST API key', 'hey-support-ai-chatbot' ); ?>
-								</a>
 								<a class="button button-primary" target="_blank" rel="noopener"
 									href="<?php echo esc_url( 'https://hey.support/dashboard?connect=woocommerce&site_url=' . rawurlencode( home_url() ) ); ?>">
-									<?php esc_html_e( '2. Connect to Hey Support', 'hey-support-ai-chatbot' ); ?>
+									<?php esc_html_e( 'Connect to Hey Support', 'hey-support-ai-chatbot' ); ?>
 								</a>
 							</p>
 							<p class="description">
-								<?php esc_html_e( 'Step 2 opens the Hey Support Connections screen with this store URL already filled in. Paste the key and secret from step 1 to finish.', 'hey-support-ai-chatbot' ); ?>
+								<?php esc_html_e( 'Opens Hey Support with this store URL already filled in:', 'hey-support-ai-chatbot' ); ?>
 								<code><?php echo esc_html( home_url() ); ?></code>
 							</p>
 						<?php else : ?>
@@ -258,7 +282,27 @@ function hey_support_render_settings_page(): void {
 	<?php
 }
 
-// ─── AJAX: Verify token ─────────────────────────────────────────────────────
+// --- AJAX: Verify token -----------------------------------------------------
+
+/**
+ * Resolve which token to test: what the operator just typed, else the one
+ * already stored.
+ *
+ * The field renders EMPTY by design - the token is write-only, so an empty
+ * submission means "leave it alone" everywhere else. Treating empty as "no
+ * token" here meant that saving a token and then pressing Verify reported
+ * "Invalid token. Mint a new key...", which sent people off minting keys that
+ * were never the problem.
+ *
+ * @param string $typed Sanitized value straight from the request.
+ */
+function hey_support_resolve_token( string $typed ): string {
+	if ( '' !== $typed ) {
+		return $typed;
+	}
+	$opts = hey_support_get_options();
+	return (string) $opts['api_token'];
+}
 
 function hey_support_ajax_verify_token(): void {
 	check_ajax_referer( 'hey_support_admin', 'nonce' );
@@ -266,9 +310,12 @@ function hey_support_ajax_verify_token(): void {
 		wp_send_json_error( [ 'message' => __( 'Forbidden', 'hey-support-ai-chatbot' ) ], 403 );
 	}
 
-	$token = isset( $_POST['token'] ) ? sanitize_text_field( wp_unslash( $_POST['token'] ) ) : '';
+	$typed = isset( $_POST['token'] ) ? sanitize_text_field( wp_unslash( $_POST['token'] ) ) : '';
+	$token = hey_support_resolve_token( $typed );
 	if ( '' === $token ) {
-		wp_send_json_error( [ 'message' => __( 'Token is required', 'hey-support-ai-chatbot' ) ], 400 );
+		// 200, not 400: a non-2xx lands in jQuery's fail() branch, which can only
+		// report a generic network error and would bury this exact message.
+		wp_send_json_error( [ 'code' => 'no_token' ], 200 );
 	}
 
 	$res = hey_support_api_me( $token );
@@ -291,7 +338,81 @@ function hey_support_ajax_verify_token(): void {
 	);
 }
 
-// ─── AJAX: Refresh chatbot list ─────────────────────────────────────────────
+// --- AJAX: Store API reachability self-check --------------------------------
+
+/**
+ * Ask THIS site whether its own Store API answers, and report the fix in the
+ * place the merchant can apply it.
+ *
+ * The point of doing it here rather than only on hey.support: WordPress fails in
+ * a handful of very specific ways - Plain permalinks, a security plugin sitting
+ * on /wp-json/, a maintenance page - and each has a one-minute fix in wp-admin.
+ *
+ * Honest caveat, reflected in the copy: this is a LOOPBACK request. Some
+ * firewalls allow the server's own IP while blocking outside traffic, so a pass
+ * here is necessary but not sufficient - hey.support probes again on connect.
+ */
+function hey_support_ajax_storefront_test(): void {
+	check_ajax_referer( 'hey_support_admin', 'nonce' );
+	if ( ! current_user_can( 'manage_options' ) ) {
+		wp_send_json_error( [ 'message' => __( 'Forbidden', 'hey-support-ai-chatbot' ) ], 403 );
+	}
+
+	if ( ! class_exists( 'WooCommerce' ) ) {
+		wp_send_json_error( [ 'message' => __( 'WooCommerce is not active on this site.', 'hey-support-ai-chatbot' ) ], 200 );
+	}
+
+	$url = rest_url( 'wc/store/v1/products?per_page=1' );
+	$res = wp_remote_get( $url, [ 'timeout' => 10 ] );
+
+	if ( is_wp_error( $res ) ) {
+		wp_send_json_error(
+			[ 'message' => __( 'Could not reach your own REST API from this server.', 'hey-support-ai-chatbot' ) ],
+			200
+		);
+	}
+
+	$code = (int) wp_remote_retrieve_response_code( $res );
+	$body = wp_remote_retrieve_body( $res );
+
+	if ( 404 === $code ) {
+		wp_send_json_error(
+			[
+				'message'      => __( 'WordPress did not recognise the Store API address. Set Settings > Permalinks to Post name and press Save, then try again.', 'hey-support-ai-chatbot' ),
+				'permalinkUrl' => admin_url( 'options-permalink.php' ),
+			],
+			200
+		);
+	}
+	if ( 401 === $code || 403 === $code ) {
+		wp_send_json_error(
+			[ 'message' => __( 'A security plugin or firewall is blocking /wp-json/. Allow it for logged-out visitors and try again.', 'hey-support-ai-chatbot' ) ],
+			200
+		);
+	}
+	if ( 200 !== $code ) {
+		/* translators: %d: HTTP status code. */
+		wp_send_json_error( [ 'message' => sprintf( __( 'Your store answered with HTTP %d.', 'hey-support-ai-chatbot' ), $code ) ], 200 );
+	}
+
+	$decoded = json_decode( $body, true );
+	if ( ! is_array( $decoded ) ) {
+		wp_send_json_error(
+			[ 'message' => __( 'Your site answered with a page instead of data. A caching or maintenance plugin is usually intercepting /wp-json/.', 'hey-support-ai-chatbot' ) ],
+			200
+		);
+	}
+
+	$total = (int) wp_remote_retrieve_header( $res, 'x-wp-total' );
+	wp_send_json_success(
+		[
+			/* translators: %d: number of published products. */
+			'message' => sprintf( _n( 'Ready - %d product visible.', 'Ready - %d products visible.', $total, 'hey-support-ai-chatbot' ), $total ),
+		]
+	);
+}
+
+// --- AJAX: Refresh chatbot list ---------------------------------------------
 
 function hey_support_ajax_refresh_chatbots(): void {
 	check_ajax_referer( 'hey_support_admin', 'nonce' );
@@ -299,9 +420,12 @@ function hey_support_ajax_refresh_chatbots(): void {
 		wp_send_json_error( [ 'message' => __( 'Forbidden', 'hey-support-ai-chatbot' ) ], 403 );
 	}
 
-	$token = isset( $_POST['token'] ) ? sanitize_text_field( wp_unslash( $_POST['token'] ) ) : '';
+	$typed = isset( $_POST['token'] ) ? sanitize_text_field( wp_unslash( $_POST['token'] ) ) : '';
+	$token = hey_support_resolve_token( $typed );
 	if ( '' === $token ) {
-		wp_send_json_error( [ 'message' => __( 'Token is required', 'hey-support-ai-chatbot' ) ], 400 );
+		// 200, not 400: a non-2xx lands in jQuery's fail() branch, which can only
+		// report a generic network error and would bury this exact message.
+		wp_send_json_error( [ 'code' => 'no_token' ], 200 );
 	}
 
 	$res = hey_support_api_chatbots( $token );

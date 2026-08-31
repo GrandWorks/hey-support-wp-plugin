@@ -30,6 +30,16 @@
 		return resp && resp.data && typeof resp.data.status === 'number' ? resp.data.status : null;
 	}
 
+	/** Server-named failures win over status-code guessing. */
+	function codeOf(resp) {
+		return resp && resp.data && typeof resp.data.code === 'string' ? resp.data.code : null;
+	}
+
+	function errorFor(resp) {
+		if (codeOf(resp) === 'no_token') { return heySupportAdmin.i18n.noToken; }
+		return failureMessage(statusOf(resp));
+	}
+
 	$(function () {
 		var $verifyBtn = $('#hey-support-ai-chatbot-verify');
 		var $verifyResult = $('#hey-support-ai-chatbot-verify-result');
@@ -42,11 +52,9 @@
 		}
 
 		$verifyBtn.on('click', function () {
+			// An empty field means "re-check the saved token", not "no token" - the
+			// field is write-only and always renders empty. The server resolves it.
 			var token = String($tokenInput.val() || '').trim();
-			if (!token) {
-				report(heySupportAdmin.i18n.invalidToken, false);
-				return;
-			}
 			$verifyBtn.prop('disabled', true);
 			$verifyResult.text(heySupportAdmin.i18n.verifying).css('color', '');
 
@@ -62,7 +70,7 @@
 						);
 						return;
 					}
-					report(failureMessage(statusOf(resp)), false);
+					report(errorFor(resp), false);
 				})
 				.fail(function () {
 					$verifyBtn.prop('disabled', false);
@@ -71,18 +79,15 @@
 		});
 
 		$refreshBtn.on('click', function () {
+			// Empty means "use the saved token" - see the Verify handler above.
 			var token = String($tokenInput.val() || '').trim();
-			if (!token) {
-				report(heySupportAdmin.i18n.invalidToken, false);
-				return;
-			}
 			$refreshBtn.prop('disabled', true).text(heySupportAdmin.i18n.refreshing);
 
 			postAjax('hey_support_refresh_chatbots', { token: token })
 				.done(function (resp) {
 					$refreshBtn.prop('disabled', false).text(heySupportAdmin.i18n.refreshLabel);
 					if (!resp || !resp.success || !resp.data || !Array.isArray(resp.data.chatbots)) {
-						report(failureMessage(statusOf(resp)), false);
+						report(errorFor(resp), false);
 						return;
 					}
 					var bots = resp.data.chatbots;
@@ -109,6 +114,47 @@
 				.fail(function () {
 					$refreshBtn.prop('disabled', false).text(heySupportAdmin.i18n.refreshLabel);
 					report(heySupportAdmin.i18n.networkErr, false);
+				});
+		});
+
+		// --- Storefront self-check ------------------------------------------
+		// Asks THIS site whether its own Store API answers. WordPress fails in a
+		// few very specific ways and each has a one-minute fix right here in
+		// wp-admin, so naming the cause beats a generic "could not connect".
+		var $storefrontBtn = $('#hey-support-storefront-test');
+		var $storefrontOut = $('#hey-support-storefront-result');
+
+		$storefrontBtn.on('click', function () {
+			var label = $storefrontBtn.text();
+			$storefrontBtn.prop('disabled', true);
+			$storefrontOut.removeClass('notice notice-error notice-success').text('');
+
+			$.post(heySupportAdmin.ajaxUrl, {
+				action: 'hey_support_storefront_test',
+				nonce: heySupportAdmin.nonce
+			})
+				.done(function (resp) {
+					$storefrontBtn.prop('disabled', false).text(label);
+					var data = (resp && resp.data) || {};
+					var msg = data.message || '';
+					if (resp && resp.success) {
+						$storefrontOut.text(msg).css('color', OK_COLOR);
+						return;
+					}
+					$storefrontOut.text(msg).css('color', ERR_COLOR);
+					// A 404 is almost always Plain permalinks - link straight to the
+					// screen that fixes it rather than describing where it lives.
+					if (data.permalinkUrl) {
+						$storefrontOut.append(
+							$('<a></a>')
+								.attr('href', data.permalinkUrl)
+								.text(' ' + heySupportAdmin.i18n.permalinks)
+						);
+					}
+				})
+				.fail(function () {
+					$storefrontBtn.prop('disabled', false).text(label);
+					$storefrontOut.text(heySupportAdmin.i18n.networkErr).css('color', ERR_COLOR);
 				});
 		});
 	});

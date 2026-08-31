@@ -107,7 +107,7 @@ function hey_support_footer_embed(): void {
 		HEY_SUPPORT_EMBED_HANDLE,
 		HEY_SUPPORT_API_BASE . '/api/chat/embed.js',
 		[],
-		HEY_SUPPORT_VERSION,
+		null,
 		[
 			'in_footer' => true,
 			'strategy'  => 'defer',

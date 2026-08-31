@@ -2,9 +2,9 @@
 Contributors: grandworksco, siddr, wazidshah
 Tags: ai, chatbot, live-chat, customer-service, woocommerce
 Requires at least: 6.5
-Tested up to: 7.0
+Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.0.0
+Stable tag: 1.1.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -138,6 +138,11 @@ Yes. Sign up at https://hey.support and start on the Free plan. Paid plans are o
 
 == Changelog ==
 
+= 1.1.0 =
+* New "Live products in chat" setting: connect this store's public catalogue so the chatbot can show real products, prices, and stock, and add them to the shopper's cart.
+* Added a "Check my store is reachable" button that tests this site's own WooCommerce Store API and names the fix when something blocks it (permalinks, security plugins, caching).
+* AI Actions now connect with a single approval in your WooCommerce admin. The REST API key is created and delivered automatically, so there is nothing to copy and paste.
+
 = 1.0.0 =
 * Initial release.
 * Settings screen: chatbot ID, optional workspace API token, enable-on rules, per-post exclusions, auto-open.
@@ -148,6 +153,9 @@ Yes. Sign up at https://hey.support and start on the Free plan. Paid plans are o
 * Verify-token and refresh-chatbot-list helpers for workspaces on plans that include public API access.
 
 == Upgrade Notice ==
+
+= 1.1.0 =
+Live products in chat for WooCommerce, a one-approval AI Actions connection, and a store reachability check. Fixes an admin script that could stay cached from 1.0.0.
 
 = 1.0.0 =
 First release.

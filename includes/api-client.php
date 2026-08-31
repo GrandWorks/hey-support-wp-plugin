@@ -1,7 +1,7 @@
 <?php
 /**
  * Minimal client for the Hey Support v1 public API. Used only by the admin
- * Settings page — Verify-token button + chatbot dropdown refresh. The public
+ * Settings page - Verify-token button + chatbot dropdown refresh. The public
  * embed never sees the token; it only carries the chatbot ID.
  *
  * @package HeySupport
@@ -49,7 +49,7 @@ function hey_support_api_get( string $path, string $token ): array {
 }
 
 /**
- * GET /api/v1/me — used to validate the token and surface team_name in the UI.
+ * GET /api/v1/me - used to validate the token and surface team_name in the UI.
  *
  * @return array{ok:bool,status:int,body:mixed,error?:string}
  */
@@ -58,7 +58,7 @@ function hey_support_api_me( string $token ): array {
 }
 
 /**
- * GET /api/v1/chatbots — paginated list, used to populate the chatbot dropdown.
+ * GET /api/v1/chatbots - paginated list, used to populate the chatbot dropdown.
  *
  * @return array{ok:bool,status:int,body:mixed,error?:string}
  */
