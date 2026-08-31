@@ -33,6 +33,7 @@ const HEY_SUPPORT_LINK_TTL = 3600;
 
 add_action( 'rest_api_init', 'hey_support_register_connect_route' );
 add_action( 'admin_post_hey_support_connect', 'hey_support_handle_connect' );
+add_action( 'admin_post_hey_support_disconnect', 'hey_support_handle_disconnect' );
 add_action( 'admin_init', 'hey_support_maybe_finish_connect' );
 add_filter( 'allowed_redirect_hosts', 'hey_support_allow_api_host' );
 
@@ -293,16 +294,44 @@ function hey_support_maybe_finish_connect(): void {
 	// Read-modify-write. hey_support_sanitize_options rebuilds the whole array,
 	// so writing a bare ['chatbot_id' => ...] would destroy enable_on,
 	// exclude_ids, auto_open and the saved token.
-	$opts               = hey_support_get_options();
-	$opts['chatbot_id'] = sanitize_text_field( (string) $body['chatbot_id'] );
+	$name = sanitize_text_field( (string) ( $body['chatbot_name'] ?? '' ) );
+
+	$opts                 = hey_support_get_options();
+	$opts['chatbot_id']   = sanitize_text_field( (string) $body['chatbot_id'] );
+	$opts['chatbot_name'] = $name;
 	update_option( HEY_SUPPORT_OPTION_KEY, $opts );
 
-	set_transient(
-		'hey_support_connected_name',
-		sanitize_text_field( (string) ( $body['chatbot_name'] ?? '' ) ),
-		60
-	);
+	// Also kept for the one-shot success notice, which fires on the very next
+	// request. The stored copy above is what the settings screen reads from then
+	// on -- the name used to live ONLY in this transient, so it was shown once
+	// and thrown away, leaving the screen permanently unable to say which agent
+	// it was actually connected to.
+	set_transient( 'hey_support_connected_name', $name, 60 );
 	hey_support_connect_notice( 'ok' );
+}
+
+/**
+ * Unlink this site from its agent.
+ *
+ * Clears only the identity. `enable_on`, `exclude_ids` and `auto_open` survive,
+ * so reconnecting later restores the placement the operator had already chosen
+ * rather than resetting them to defaults -- and nothing at all is touched on the
+ * Hey Support side, where the conversations and settings live.
+ */
+function hey_support_handle_disconnect(): void {
+	if ( ! current_user_can( 'manage_options' ) ) {
+		wp_die( esc_html__( 'You do not have permission to do that.', 'hey-support-ai-chatbot' ) );
+	}
+	check_admin_referer( 'hey_support_disconnect' );
+
+	$opts                 = hey_support_get_options();
+	$opts['chatbot_id']   = '';
+	$opts['chatbot_name'] = '';
+	update_option( HEY_SUPPORT_OPTION_KEY, $opts );
+
+	hey_support_connect_notice( 'disconnected' );
+	wp_safe_redirect( hey_support_settings_url() );
+	exit;
 }
 
 /** Carry a one-shot result to the settings screen. */

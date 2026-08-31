@@ -139,7 +139,7 @@ Yes. Sign up at https://hey.support and start on the Free plan. Paid plans are o
 
 == Screenshots ==
 
-1. Settings > Hey Support after connecting, showing where the widget appears.
+1. Settings > Hey Support after connecting, showing the agent, where the widget appears, and your store.
 2. The connect screen before an agent is chosen.
 3. Choosing an agent on Hey Support.
 4. Hiding the widget on chosen pages, by name.
@@ -154,6 +154,10 @@ Yes. Sign up at https://hey.support and start on the Free plan. Paid plans are o
 * "Hide on these post IDs" is now a search-by-name picker. WordPress never showed you post IDs, so finding them meant hunting through URLs. Your existing choices are kept exactly as they were.
 * Removed the workspace API token field. Connecting replaced both things it did, and it only ever worked on the Scale plan.
 * Added a Settings link on the Plugins screen, documentation and support links, and a reminder if the plugin is installed but not connected.
+* The screen now names the agent it is connected to, rather than just saying "connected", and links straight to your site so you can go and look at the widget.
+* Each placement option now explains what it does, so you can tell "Blog posts only" from "Pages only" without trying it.
+* Added Disconnect. Unlinking a site previously meant clearing a field by hand.
+* Fixed: the page exclusion list is no longer offered when the widget is set to appear only where you place it yourself, where it could never have had any effect. Your list is kept either way.
 * Fixed: an expired connect link no longer reports that the plugin is missing.
 
 = 1.1.0 =

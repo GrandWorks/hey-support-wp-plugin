@@ -1,120 +1,400 @@
 /*
  * Settings screen.
  *
- * Native WordPress chrome with restrained brand: WP's own controls, spacing and
- * colours, arranged as cards instead of a form-table. A full re-skin would fight
- * the admin theme, break under the eight admin colour schemes, and is exactly
- * what plugin reviewers dislike -- so the only brand moments here are the mark
- * in the header and the live dot.
+ * Branded masthead, native body. The masthead is a self-contained cream surface
+ * carrying the lockup, the page title and one guide paragraph; everything below
+ * it uses WordPress's own controls, button classes and Dashicons.
  *
- * Colours come from WP's own CSS variables where they exist, so alternate admin
- * colour schemes keep working.
+ * No accent is invented anywhere in this file. Interactive colour comes from
+ * `.button-primary` and from WordPress's own radios and checkboxes, which track
+ * all eight admin colour schemes for free; a hand-picked brand blue would be
+ * wrong on seven of them and is the thing plugin reviewers flag.
+ *
+ * Where this file does need the scheme colour it writes
+ * `var(--wp-admin-theme-color, #3858e9)`, copying the shape core itself uses in
+ * buttons.min.css. Worth knowing why the fallback is not optional: the colour
+ * SCHEME stylesheets define no custom properties of their own and reference that
+ * variable with NO fallback, and they load after buttons.min.css. So on any
+ * screen where the variable is missing, `border: 1px solid var(--undefined)`
+ * is invalid at computed-value time and collapses to the initial value -- a
+ * zero-width border on a transparent background, with `.button-primary`'s
+ * literal white text left floating on it. Core's fallback is what stops that,
+ * and copying it costs nothing.
+ *
+ * What makes the screen feel finished is the type scale, the card hierarchy and
+ * the spacing rhythm -- not paint. The one brand moment on the page is the mint
+ * bubble inside the logo.
  */
 
 .hs-wrap {
-	max-width: 760px;
+	max-width: 880px;
 }
 
-.hs-head {
+/* WordPress reserves space above .wrap for a floating h1; the masthead is our
+   h1's container, so that reservation would leave a gap above it. */
+.hs-wrap > .hs-masthead:first-child {
+	margin-top: 20px;
+}
+
+/* -- Masthead ------------------------------------------------------------ */
+
+.hs-masthead {
 	display: flex;
-	align-items: center;
-	gap: 10px;
-	margin: 8px 0 4px;
+	flex-wrap: wrap;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 24px 32px;
+	background: #fcf7eb;
+	border: 1px solid #eae3d3;
+	border-radius: 10px;
+	box-shadow: 0 1px 2px rgba(31, 30, 27, 0.04);
+	padding: 24px;
+	margin: 0 0 22px;
 }
 
-.hs-head svg {
+.hs-masthead-id {
+	flex: 1 1 420px;
+	min-width: 0;
+}
+
+.hs-logo {
 	display: block;
+	width: 139px;
+	height: 30px;
+	margin: 0 0 14px;
 }
 
-.hs-sub {
-	margin: 0 0 20px;
-	color: #646970;
+/* 23px/400 is WordPress's own `.wrap h1`, which happens to be the app's heading
+   rule too (headings never exceed weight 400). Native and on-brand at once. */
+.hs-wrap .hs-masthead-id h1 {
+	margin: 0 0 8px;
+	padding: 0;
+	font-size: 23px;
+	font-weight: 400;
+	line-height: 1.3;
+	letter-spacing: -0.01em;
+	color: #1f1e1b;
+}
+
+.hs-lede {
+	margin: 0;
+	max-width: 62ch;
+	font-size: 14px;
+	line-height: 1.62;
+	color: #5c5952;
+}
+
+.hs-masthead-state {
+	flex: 0 1 auto;
+	min-width: 0;
+}
+
+.hs-state {
+	display: flex;
+	align-items: flex-start;
+	gap: 9px;
+	margin: 2px 0 12px;
+}
+
+.hs-state-text {
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+	min-width: 0;
+}
+
+.hs-state-text strong {
 	font-size: 13px;
+	font-weight: 600;
+	color: #1f1e1b;
+	overflow-wrap: anywhere;
+}
+
+.hs-state-host {
+	font-size: 12px;
+	color: #6b675e;
+	overflow-wrap: anywhere;
+}
+
+/* Deep green, not mint: mint is a surface colour and fails as a small mark on a
+   light ground. This dot has to read at 8px. */
+.hs-dot {
+	width: 8px;
+	height: 8px;
+	margin-top: 5px;
+	border-radius: 50%;
+	background: #1b7a43;
+	flex: none;
+}
+
+/* Darkened from the taupe surface tone until it clears 3:1 on cream: this dot
+   is a non-text status indicator, not decoration. */
+.hs-dot-off {
+	background: #8c8169;
+}
+
+.hs-state-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin: 0 0 8px;
+}
+
+.hs-state-sub {
+	margin: 0;
+}
+
+/* .button-link declares its own font-size, so sizing the wrapper did nothing. */
+.hs-wrap .hs-state-sub .button-link {
+	font-size: 12px;
+	color: #6b675e;
+}
+
+.hs-wrap .hs-state-sub .button-link:hover,
+.hs-wrap .hs-state-sub .button-link:focus {
+	color: #1f1e1b;
+}
+
+.hs-inline-form {
+	display: inline;
 }
 
 /* -- Cards --------------------------------------------------------------- */
 
 .hs-card {
 	background: #fff;
-	border: 1px solid #dcdcde;
+	border: 1px solid #e0e0e2;
 	border-radius: 8px;
-	padding: 20px 22px;
-	margin-bottom: 16px;
-}
-
-.hs-card h2 {
-	margin: 0 0 4px;
-	font-size: 14px;
-	font-weight: 600;
-	line-height: 1.4;
-}
-
-.hs-card .hs-card-desc {
+	box-shadow: 0 1px 2px rgba(31, 30, 27, 0.04);
+	padding: 22px 24px;
 	margin: 0 0 16px;
-	color: #646970;
+}
+
+.hs-card-flush {
+	padding: 0;
+	overflow: hidden;
+}
+
+.hs-card-head {
+	margin: 0 0 18px;
+}
+
+.hs-card-title {
+	display: flex;
+	align-items: center;
+	gap: 9px;
+	margin: 0 0 5px;
+}
+
+.hs-card-title .dashicons {
+	flex: none;
+	color: #6b675e;
+	font-size: 18px;
+	width: 18px;
+	height: 18px;
+}
+
+.hs-wrap .hs-card-title h2 {
+	margin: 0;
+	padding: 0;
+	font-size: 15px;
+	font-weight: 600;
+	line-height: 1.35;
+	color: #1d2327;
+}
+
+.hs-card-desc {
+	margin: 0;
+	max-width: 68ch;
 	font-size: 13px;
 	line-height: 1.6;
+	color: #646970;
 }
 
-.hs-card .hs-card-desc:last-child {
-	margin-bottom: 0;
-}
-
-/* -- The connect card (first run) ----------------------------------------- */
+/* -- Connect card (first run) -------------------------------------------- */
 
 .hs-connect {
+	padding: 34px 32px 30px;
 	text-align: center;
-	padding: 34px 24px 30px;
 }
 
-.hs-connect h2 {
-	font-size: 18px;
+.hs-wrap .hs-connect h2 {
+	margin: 0 0 8px;
+	font-size: 19px;
 	font-weight: 600;
-	margin-bottom: 6px;
 }
 
 .hs-connect .hs-card-desc {
-	max-width: 40em;
-	margin-left: auto;
-	margin-right: auto;
+	max-width: 46ch;
+	margin: 0 auto 22px;
 }
 
-.hs-connect .button {
-	min-height: 36px;
-	padding: 0 22px;
-}
-
-/* -- Connected header ---------------------------------------------------- */
-
-.hs-status {
-	display: flex;
-	align-items: center;
-	gap: 10px;
-	flex-wrap: wrap;
-}
-
-.hs-dot {
-	width: 8px;
-	height: 8px;
-	border-radius: 50%;
-	background: #2f8f50;
-	flex: none;
-}
-
-.hs-status-name {
-	font-weight: 600;
+.hs-connect .button-hero {
+	min-height: 42px;
+	padding: 0 26px;
 	font-size: 14px;
 }
 
-.hs-status-meta {
+/* Numbered because these really are a sequence -- what happens, in order, after
+   the button is pressed. Not a decorative eyebrow. */
+.hs-steps {
+	counter-reset: hs-step;
+	list-style: none;
+	display: inline-flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 8px 22px;
+	margin: 24px 0 0;
+	padding: 0;
+}
+
+.hs-steps li {
+	counter-increment: hs-step;
+	margin: 0;
+	font-size: 12.5px;
 	color: #646970;
+}
+
+.hs-steps li::before {
+	content: counter(hs-step);
+	display: inline-grid;
+	place-items: center;
+	width: 17px;
+	height: 17px;
+	margin-right: 7px;
+	border-radius: 50%;
+	background: #f0efe9;
+	color: #5c5952;
+	font-size: 11px;
+	font-weight: 600;
+	vertical-align: 1px;
+}
+
+.hs-manual-row {
+	margin: 22px 0 0;
+	padding-top: 18px;
+	border-top: 1px solid #f0f0f1;
 	font-size: 13px;
 }
 
-.hs-status-actions {
-	margin-left: auto;
-	display: flex;
+.hs-manual {
+	max-width: 340px;
+	margin: 14px auto 0;
+	text-align: left;
+}
+
+.hs-manual .description {
+	margin: 6px 0 12px;
+}
+
+/* -- Choice rows --------------------------------------------------------- */
+
+.hs-choices {
+	display: grid;
 	gap: 8px;
+	margin: 0 0 24px;
+}
+
+.hs-choice {
+	display: flex;
+	align-items: flex-start;
+	gap: 11px;
+	padding: 12px 14px;
+	border: 1px solid #e0e0e2;
+	border-radius: 7px;
+	cursor: pointer;
+	transition: border-color 140ms ease-out, background-color 140ms ease-out;
+}
+
+.hs-choice:hover {
+	background: #fafafa;
+	border-color: #c8c8cc;
+}
+
+/* Progressive enhancement: without :has() the row simply never highlights and
+   the native radio still shows which is chosen, so nothing is lost. The radio
+   itself supplies the admin colour scheme's blue -- this row supplies only
+   structure, which is the whole reason no accent is hardcoded here. */
+.hs-choice:has(input:checked) {
+	background: #f6f7f7;
+	border-color: #a7aaad;
+}
+
+/* Scheme colour where it resolves, core's own literal where it does not. */
+.hs-choice:has(input:focus-visible) {
+	outline: 2px solid var(--wp-admin-theme-color, #3858e9);
+	outline-offset: 1px;
+}
+
+.hs-choice input[type='radio'] {
+	flex: none;
+	margin: 2px 0 0;
+}
+
+.hs-choice-text {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	min-width: 0;
+}
+
+.hs-choice-title {
+	font-size: 13.5px;
+	font-weight: 600;
+	line-height: 1.4;
+	color: #1d2327;
+}
+
+.hs-choice-note {
+	font-size: 12.5px;
+	line-height: 1.5;
+	color: #646970;
+}
+
+/* -- Nested sub-setting -------------------------------------------------- */
+
+/* Indented and ruled so "except on these" reads as a qualifier on the choice
+   above rather than a fifth, unrelated control. */
+.hs-subfield {
+	position: relative;
+	padding-left: 17px;
+	border-left: 1px solid #e6e6e8;
+}
+
+.hs-subfield-off {
+	display: none;
+	margin: 8px 0 0;
+	font-size: 12.5px;
+	color: #646970;
+}
+
+/* Exclusions mean nothing when the widget only appears where it is placed by
+   hand. The section dims and the search box is disabled -- but the hidden field
+   carrying the saved IDs never is, because a disabled input submits nothing and
+   would wipe the list on the next save. */
+.hs-subfield.is-off {
+	opacity: 0.55;
+}
+
+.hs-subfield.is-off .hs-subfield-off {
+	display: block;
+	opacity: 1;
+}
+
+.hs-label {
+	display: block;
+	margin: 0 0 3px;
+	font-size: 13px;
+	font-weight: 600;
+	color: #1d2327;
+}
+
+.hs-help {
+	margin: 0 0 12px;
+	max-width: 68ch;
+	font-size: 12.5px;
+	line-height: 1.6;
+	color: #646970;
 }
 
 /* -- Token chips (the page picker) --------------------------------------- */
@@ -220,45 +500,212 @@
 	margin-left: 6px;
 }
 
-/* -- Advanced ------------------------------------------------------------ */
+/* -- Store sections ------------------------------------------------------ */
 
-.hs-advanced summary {
-	cursor: pointer;
-	font-size: 13px;
-	font-weight: 600;
-	padding: 4px 0;
+/* Two genuinely different things: one is public and needs no permission, the
+   other mints a key. A <strong> mid-paragraph said that; an <h3> and a rule
+   show it. */
+.hs-section + .hs-section {
+	margin-top: 22px;
+	padding-top: 22px;
+	border-top: 1px solid #f0f0f1;
 }
 
-.hs-advanced[open] summary {
-	margin-bottom: 14px;
+.hs-wrap .hs-section h3 {
+	margin: 0 0 5px;
+	padding: 0;
+	font-size: 13px;
+	font-weight: 600;
+	line-height: 1.4;
+	color: #1d2327;
+}
+
+.hs-row {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin: 0;
+}
+
+.hs-result {
+	margin: 10px 0 0;
+	font-size: 12.5px;
+	line-height: 1.6;
+}
+
+.hs-result:empty {
+	margin: 0;
+}
+
+.hs-result.is-ok {
+	color: #1b7a43;
+}
+
+.hs-result.is-error {
+	color: #b32d2e;
+}
+
+/* -- Advanced ------------------------------------------------------------ */
+
+.hs-advanced > summary {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 16px 24px;
+	cursor: pointer;
+	font-size: 14px;
+	font-weight: 600;
+	color: #1d2327;
+	list-style: none;
+}
+
+.hs-advanced > summary::-webkit-details-marker {
+	display: none;
+}
+
+.hs-advanced > summary:hover {
+	background: #fafafa;
+}
+
+.hs-advanced > summary:focus-visible {
+	outline: 2px solid var(--wp-admin-theme-color, #3858e9);
+	outline-offset: -2px;
+}
+
+.hs-advanced > summary .dashicons {
+	flex: none;
+	color: #6b675e;
+	font-size: 19px;
+	width: 19px;
+	height: 19px;
+	transition: transform 160ms ease-out;
+}
+
+.hs-advanced[open] > summary .dashicons {
+	transform: rotate(45deg);
+}
+
+/* Says what is inside, so a collapsed row is not a mystery box. This is what
+   made the old Advanced card read as a rendering failure: it contained a
+   triangle and nothing else. */
+.hs-summary-note {
+	margin-left: auto;
+	font-size: 12.5px;
+	font-weight: 400;
+	color: #646970;
+}
+
+.hs-advanced-body {
+	padding: 4px 24px 22px;
+	border-top: 1px solid #f0f0f1;
 }
 
 .hs-field {
-	margin-bottom: 16px;
+	padding: 18px 0;
+	border-bottom: 1px solid #f6f7f7;
 }
 
 .hs-field:last-child {
-	margin-bottom: 0;
+	padding-bottom: 0;
+	border-bottom: 0;
 }
 
-.hs-field label {
-	display: block;
-	font-weight: 600;
+.hs-check {
+	display: flex;
+	align-items: flex-start;
+	gap: 8px;
+	margin: 0 0 6px;
 	font-size: 13px;
-	margin-bottom: 4px;
+	line-height: 1.5;
 }
 
-.hs-field .description {
-	margin-top: 4px;
+.hs-check input {
+	margin: 1px 0 0;
 }
 
-.hs-radio {
-	display: block;
-	margin-bottom: 6px;
+.hs-copyrow {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+.hs-copyrow code {
+	background: #f6f7f7;
+	border: 1px solid #e0e0e2;
+	border-radius: 4px;
+	padding: 5px 9px;
 	font-size: 13px;
 }
 
-.hs-inline-note {
-	font-size: 13px;
+.hs-id-edit {
+	margin-top: 10px;
+}
+
+.hs-danger .hs-disconnect {
+	color: #b32d2e;
+	border-color: #d9b3b3;
+}
+
+.hs-danger .hs-disconnect:hover,
+.hs-danger .hs-disconnect:focus {
+	color: #8a2424;
+	border-color: #b32d2e;
+	background: #fcf0f0;
+}
+
+/* -- Save row ------------------------------------------------------------ */
+
+.hs-actions {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 8px 14px;
+	margin: 20px 0 0;
+}
+
+.hs-actions-note {
+	font-size: 12.5px;
 	color: #646970;
+}
+
+/* -- Narrow ---------------------------------------------------------------
+   WordPress collapses its own admin menu at 782px; the masthead's two columns
+   stop fitting a little before that. */
+
+@media screen and (max-width: 782px) {
+	.hs-masthead {
+		padding: 22px 20px;
+	}
+
+	.hs-masthead-state {
+		flex-basis: 100%;
+		padding-top: 18px;
+		border-top: 1px solid #eae3d3;
+	}
+
+	.hs-card {
+		padding: 20px 18px;
+	}
+
+	.hs-advanced > summary,
+	.hs-advanced-body {
+		padding-left: 18px;
+		padding-right: 18px;
+	}
+
+	.hs-summary-note {
+		display: none;
+	}
+
+	.hs-connect {
+		padding: 28px 20px 26px;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.hs-choice,
+	.hs-advanced > summary .dashicons {
+		transition: none;
+	}
 }

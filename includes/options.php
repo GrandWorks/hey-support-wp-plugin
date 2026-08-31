@@ -25,11 +25,12 @@ const HEY_SUPPORT_OPTION_KEY = 'hey_support_settings';
  */
 function hey_support_default_options(): array {
 	return [
-		'api_token'   => '',
-		'chatbot_id'  => '',
-		'enable_on'   => 'all',     // all | posts | pages | shortcode-only
-		'exclude_ids' => '',        // comma-separated post IDs
-		'auto_open'   => false,
+		'api_token'    => '',
+		'chatbot_id'   => '',
+		'chatbot_name' => '',       // display only; written by connect, never by a form
+		'enable_on'    => 'all',    // all | posts | pages | shortcode-only
+		'exclude_ids'  => '',       // comma-separated post IDs
+		'auto_open'    => false,
 	];
 }
 
@@ -79,6 +80,21 @@ function hey_support_sanitize_options( $input ): array {
 	}
 
 	$out['chatbot_id'] = isset( $input['chatbot_id'] ) ? sanitize_text_field( $input['chatbot_id'] ) : '';
+
+	// Written by the connect exchange, never rendered as a field. Like the token
+	// above it has to be carried forward explicitly, because this function
+	// rebuilds the whole array from the submitted form -- so anything with no
+	// input to read is otherwise silently blanked on every Save.
+	//
+	// But it is carried only while it still describes the SAME agent. Someone who
+	// pastes a different ID into the Advanced field has told us nothing about
+	// what that agent is called, so keeping the old name would leave the screen
+	// confidently announcing "Connected to Acme Support" over a completely
+	// different bot. No name is better than a wrong one; connecting properly
+	// fills it back in.
+	$stored_id           = is_array( $stored ) && isset( $stored['chatbot_id'] ) ? (string) $stored['chatbot_id'] : '';
+	$stored_name         = is_array( $stored ) && isset( $stored['chatbot_name'] ) ? (string) $stored['chatbot_name'] : '';
+	$out['chatbot_name'] = $out['chatbot_id'] === $stored_id ? $stored_name : '';
 
 	$enable_on        = isset( $input['enable_on'] ) ? sanitize_text_field( $input['enable_on'] ) : 'all';
 	$out['enable_on'] = in_array( $enable_on, [ 'all', 'posts', 'pages', 'shortcode-only' ], true ) ? $enable_on : 'all';

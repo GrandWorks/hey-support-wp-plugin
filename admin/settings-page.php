@@ -24,9 +24,16 @@
  * silently dropping a working setting on upgrade is worse than the problem that
  * would have solved.
  *
- * Native WordPress chrome throughout: WP's own controls and colours, arranged as
- * cards. A full brand re-skin would fight the admin theme and break under the
- * alternate admin colour schemes.
+ * BRANDED MASTHEAD, NATIVE BODY -- the shape Jetpack, WooCommerce and Rank Math
+ * all settled on. The masthead is a self-contained cream surface, so it cannot
+ * clash with any of the admin colour schemes; everything below it uses WordPress
+ * controls, WordPress button classes and WordPress spacing.
+ *
+ * No accent is invented anywhere. Interactive colour comes from WordPress's own
+ * `.button-primary` and its own form controls, which already carry whichever of
+ * the eight admin colour schemes the user picked; a hand-chosen brand blue would
+ * be wrong on seven of them. What makes the screen feel considered is the type
+ * scale, the hierarchy and the structure, not paint.
  *
  * @package HeySupport
  */
@@ -137,7 +144,7 @@ function hey_support_admin_enqueue( string $hook ): void {
 	wp_enqueue_style(
 		'hey-support-ai-chatbot-admin',
 		HEY_SUPPORT_URL . 'admin/settings.css',
-		[],
+		[ 'dashicons' ],
 		HEY_SUPPORT_VERSION
 	);
 	wp_enqueue_script(
@@ -165,6 +172,10 @@ function hey_support_admin_enqueue( string $hook ): void {
 				'remove'     => __( 'Remove', 'hey-support-ai-chatbot' ),
 				'networkErr' => __( 'Network error. Check your connection and try again.', 'hey-support-ai-chatbot' ),
 				'permalinks' => __( 'Open Permalinks settings', 'hey-support-ai-chatbot' ),
+				'copy'       => __( 'Copy', 'hey-support-ai-chatbot' ),
+				'copied'     => __( 'Copied', 'hey-support-ai-chatbot' ),
+				'checking'   => __( 'Checking...', 'hey-support-ai-chatbot' ),
+				'confirmOff' => __( 'Disconnect this agent? The chat widget will stop appearing on your site. Your conversations and settings in Hey Support are not affected.', 'hey-support-ai-chatbot' ),
 			],
 		]
 	);
@@ -199,26 +210,25 @@ function hey_support_render_settings_page(): void {
 
 	$opts      = hey_support_get_options();
 	$connected = '' !== (string) $opts['chatbot_id'];
-
-	hey_support_flush_connect_result();
 	?>
 	<div class="wrap hs-wrap">
-		<div class="hs-head">
-			<?php hey_support_mark(); ?>
-			<h1 style="margin:0;padding:0;font-size:20px;"><?php esc_html_e( 'Hey Support', 'hey-support-ai-chatbot' ); ?></h1>
-		</div>
+		<?php hey_support_render_masthead( $opts, $connected ); ?>
+		<?php hey_support_flush_connect_result(); ?>
 
 		<?php if ( ! $connected ) : ?>
 			<?php hey_support_render_connect_card(); ?>
 		<?php else : ?>
-			<?php hey_support_render_connected_header(); ?>
-
 			<form method="post" action="options.php">
 				<?php settings_fields( 'hey_support_settings_group' ); ?>
 				<?php hey_support_render_placement_card( $opts ); ?>
 				<?php hey_support_render_commerce_card(); ?>
 				<?php hey_support_render_advanced_card( $opts ); ?>
-				<?php submit_button(); ?>
+				<div class="hs-actions">
+					<?php submit_button( __( 'Save changes', 'hey-support-ai-chatbot' ), 'primary', 'submit', false ); ?>
+					<span class="hs-actions-note">
+						<?php esc_html_e( 'Placement changes take effect immediately. Nothing here changes what your agent says.', 'hey-support-ai-chatbot' ); ?>
+					</span>
+				</div>
 			</form>
 		<?php endif; ?>
 	</div>
@@ -226,22 +236,76 @@ function hey_support_render_settings_page(): void {
 }
 
 /**
- * The brand mark: the real one, shipped as an asset.
+ * The masthead: identity on the left, connection state on the right.
  *
- * An <img> rather than inlined SVG because the path data is a single 3KB string
- * that no amount of wrapping keeps readable -- and wrapping it is worse than
- * unreadable, since breaking path data on whitespace silently corrupts the
- * shape. As a file it stays byte-identical to the source vectors, and the
- * browser caches it.
+ * The connection state used to be a fourth card that looked exactly like the
+ * three setting cards below it, which was wrong twice over -- it is a statement
+ * of fact rather than a control, and it pushed the actual controls a whole card
+ * further down. Folding it in here deletes a card and gives the top of the page
+ * something to say.
  *
- * This is the one place any brand colour appears on this screen.
+ * @param array<string, mixed> $opts      Merged settings.
+ * @param bool                 $connected Whether an agent is linked.
  */
-function hey_support_mark(): void {
-	printf(
-		'<img src="%s" width="38" height="22" alt="%s" />',
-		esc_url( HEY_SUPPORT_URL . 'admin/logo.svg' ),
-		esc_attr__( 'Hey Support', 'hey-support-ai-chatbot' )
-	);
+function hey_support_render_masthead( array $opts, bool $connected ): void {
+	$name = trim( (string) ( $opts['chatbot_name'] ?? '' ) );
+	?>
+	<div class="hs-masthead">
+		<div class="hs-masthead-id">
+			<img class="hs-logo"
+				src="<?php echo esc_url( HEY_SUPPORT_URL . 'admin/logo-lockup.svg' ); ?>"
+				width="139" height="30"
+				alt="<?php esc_attr_e( 'Hey Support', 'hey-support-ai-chatbot' ); ?>" />
+			<h1><?php esc_html_e( 'Hey Support for WordPress', 'hey-support-ai-chatbot' ); ?></h1>
+			<p class="hs-lede">
+				<?php
+				echo $connected
+					? esc_html__( 'This screen controls where your chat widget appears on this site and what it can read from your store. How the agent looks, what it knows and what it says are set in your Hey Support dashboard.', 'hey-support-ai-chatbot' )
+					: esc_html__( 'Add an AI agent to this site that answers your visitors around the clock. Connect it below, then choose where the chat button appears. Everything the agent knows and says is set in your Hey Support dashboard.', 'hey-support-ai-chatbot' );
+				?>
+			</p>
+		</div>
+
+		<div class="hs-masthead-state">
+			<?php if ( $connected ) : ?>
+				<p class="hs-state">
+					<span class="hs-dot" aria-hidden="true"></span>
+					<span class="hs-state-text">
+						<strong>
+							<?php
+							echo '' !== $name
+								/* translators: %s: the connected agent's name. */
+								? esc_html( sprintf( __( 'Connected to %s', 'hey-support-ai-chatbot' ), $name ) )
+								: esc_html__( 'Connected', 'hey-support-ai-chatbot' );
+							?>
+						</strong>
+						<span class="hs-state-host"><?php echo esc_html( hey_support_site_host() ); ?></span>
+					</span>
+				</p>
+				<p class="hs-state-actions">
+					<a class="button button-primary" target="_blank" rel="noopener"
+						href="<?php echo esc_url( HEY_SUPPORT_API_BASE . '/dashboard' ); ?>">
+						<?php esc_html_e( 'Open dashboard', 'hey-support-ai-chatbot' ); ?>
+					</a>
+					<a class="button" target="_blank" rel="noopener" href="<?php echo esc_url( home_url( '/' ) ); ?>">
+						<?php esc_html_e( 'View your site', 'hey-support-ai-chatbot' ); ?>
+					</a>
+				</p>
+				<p class="hs-state-sub">
+					<?php hey_support_connect_button( false ); ?>
+				</p>
+			<?php else : ?>
+				<p class="hs-state hs-state-off">
+					<span class="hs-dot hs-dot-off" aria-hidden="true"></span>
+					<span class="hs-state-text">
+						<strong><?php esc_html_e( 'Not connected', 'hey-support-ai-chatbot' ); ?></strong>
+						<span class="hs-state-host"><?php echo esc_html( hey_support_site_host() ); ?></span>
+					</span>
+				</p>
+			<?php endif; ?>
+		</div>
+	</div>
+	<?php
 }
 
 /**
@@ -255,49 +319,28 @@ function hey_support_render_connect_card(): void {
 	<div class="hs-card hs-connect">
 		<h2><?php esc_html_e( 'Connect your agent', 'hey-support-ai-chatbot' ); ?></h2>
 		<p class="hs-card-desc">
-			<?php esc_html_e( 'Sign in to Hey Support and pick the agent for this site. Nothing to copy or paste.', 'hey-support-ai-chatbot' ); ?>
+			<?php esc_html_e( 'One button. You will sign in to Hey Support, pick which agent belongs on this site, and land back here with it live. There is nothing to copy, paste or configure.', 'hey-support-ai-chatbot' ); ?>
 		</p>
 		<?php hey_support_connect_button( true ); ?>
-		<p class="hs-card-desc" style="margin-top:16px;margin-bottom:0;">
-			<button type="button" class="button-link hs-manual-toggle" aria-expanded="false">
-				<?php esc_html_e( 'I have a chatbot ID', 'hey-support-ai-chatbot' ); ?>
+		<ul class="hs-steps">
+			<li><?php esc_html_e( 'Sign in or create a free account', 'hey-support-ai-chatbot' ); ?></li>
+			<li><?php esc_html_e( 'Choose the agent for this site', 'hey-support-ai-chatbot' ); ?></li>
+			<li><?php esc_html_e( 'Come back here and choose where it appears', 'hey-support-ai-chatbot' ); ?></li>
+		</ul>
+		<p class="hs-manual-row">
+			<button type="button" class="button-link hs-manual-toggle" aria-expanded="false" aria-controls="hs-manual">
+				<?php esc_html_e( 'Enter a chatbot ID instead', 'hey-support-ai-chatbot' ); ?>
 			</button>
 		</p>
-		<div class="hs-manual" hidden>
-			<form method="post" action="options.php" style="max-width:340px;margin:14px auto 0;">
+		<div class="hs-manual" id="hs-manual" hidden>
+			<form method="post" action="options.php">
 				<?php settings_fields( 'hey_support_settings_group' ); ?>
 				<?php hey_support_chatbot_id_input( '' ); ?>
-				<p class="description" style="text-align:left;">
-					<?php esc_html_e( 'For local sites Hey Support cannot reach, and for support.', 'hey-support-ai-chatbot' ); ?>
+				<p class="description">
+					<?php esc_html_e( 'For sites Hey Support cannot reach from the internet, such as a local install, and for when support asks you to.', 'hey-support-ai-chatbot' ); ?>
 				</p>
 				<?php submit_button( __( 'Save', 'hey-support-ai-chatbot' ), 'secondary', 'submit', false ); ?>
 			</form>
-		</div>
-	</div>
-	<?php
-}
-
-/**
- * Connected: what is true, and how to change it.
- *
- * It says the widget is on the site, which is what this screen can actually
- * know. Whether anyone has USED it is a different question, and the dashboard is
- * where that gets answered -- so it links there rather than inventing a status.
- */
-function hey_support_render_connected_header(): void {
-	?>
-	<div class="hs-card">
-		<div class="hs-status">
-			<span class="hs-dot" aria-hidden="true"></span>
-			<span class="hs-status-name"><?php esc_html_e( 'Your agent is live on this site', 'hey-support-ai-chatbot' ); ?></span>
-			<span class="hs-status-meta"><?php echo esc_html( hey_support_site_host() ); ?></span>
-			<span class="hs-status-actions">
-				<a class="button" target="_blank" rel="noopener"
-					href="<?php echo esc_url( HEY_SUPPORT_API_BASE . '/dashboard' ); ?>">
-					<?php esc_html_e( 'Open dashboard', 'hey-support-ai-chatbot' ); ?>
-				</a>
-				<?php hey_support_connect_button( false ); ?>
-			</span>
 		</div>
 	</div>
 	<?php
@@ -312,130 +355,239 @@ function hey_support_render_connected_header(): void {
  */
 function hey_support_connect_button( bool $primary ): void {
 	?>
-	<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="display:inline;">
+	<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="hs-inline-form">
 		<input type="hidden" name="action" value="hey_support_connect" />
 		<?php wp_nonce_field( 'hey_support_connect' ); ?>
-		<button type="submit" class="button <?php echo $primary ? 'button-primary' : ''; ?>">
+		<button type="submit" class="<?php echo $primary ? 'button button-primary button-hero' : 'button-link'; ?>">
 			<?php
 			echo $primary
 				? esc_html__( 'Connect to Hey Support', 'hey-support-ai-chatbot' )
-				: esc_html__( 'Change agent', 'hey-support-ai-chatbot' );
+				: esc_html__( 'Connect a different agent', 'hey-support-ai-chatbot' );
 			?>
 		</button>
 	</form>
 	<?php
 }
 
+/**
+ * Card header: dashicon, title, description.
+ *
+ * Dashicons rather than an icon set of our own -- they ship with WordPress, cost
+ * nothing to load, and already track the admin colour schemes. The point of them
+ * here is scanning, not decoration: a settings screen with no glyphs is read
+ * linearly, which is why the old one felt like a wall.
+ */
+function hey_support_card_head( string $icon, string $title, string $desc ): void {
+	?>
+	<div class="hs-card-head">
+		<div class="hs-card-title">
+			<span class="dashicons <?php echo esc_attr( $icon ); ?>" aria-hidden="true"></span>
+			<h2><?php echo esc_html( $title ); ?></h2>
+		</div>
+		<p class="hs-card-desc"><?php echo esc_html( $desc ); ?></p>
+	</div>
+	<?php
+}
+
 function hey_support_render_placement_card( array $opts ): void {
+	// Each option carries the consequence of choosing it. A bare radio label
+	// makes the reader simulate the outcome; one short line states it.
 	$choices = [
-		'all'            => __( 'Everywhere', 'hey-support-ai-chatbot' ),
-		'posts'          => __( 'Posts only', 'hey-support-ai-chatbot' ),
-		'pages'          => __( 'Pages only', 'hey-support-ai-chatbot' ),
-		'shortcode-only' => __( 'Only where I place it with the block or shortcode', 'hey-support-ai-chatbot' ),
+		'all'            => [
+			__( 'Everywhere', 'hey-support-ai-chatbot' ),
+			__( 'Every page, post and product on your site. This is the right answer for almost everyone.', 'hey-support-ai-chatbot' ),
+		],
+		'posts'          => [
+			__( 'Blog posts only', 'hey-support-ai-chatbot' ),
+			__( 'Posts and the pages that list them. Not your pages or products.', 'hey-support-ai-chatbot' ),
+		],
+		'pages'          => [
+			__( 'Pages only', 'hey-support-ai-chatbot' ),
+			__( 'Pages such as Home, About and Contact. Not your blog posts.', 'hey-support-ai-chatbot' ),
+		],
+		'shortcode-only' => [
+			__( 'Only where I place it', 'hey-support-ai-chatbot' ),
+			__( 'Nothing appears until you add the Hey Support block or the shortcode to a page yourself.', 'hey-support-ai-chatbot' ),
+		],
 	];
 	?>
 	<div class="hs-card">
-		<h2><?php esc_html_e( 'Where it appears', 'hey-support-ai-chatbot' ); ?></h2>
-		<p class="hs-card-desc"><?php esc_html_e( 'The chat button sits in the corner of every page you choose.', 'hey-support-ai-chatbot' ); ?></p>
+		<?php
+		hey_support_card_head(
+			'dashicons-visibility',
+			__( 'Where it appears', 'hey-support-ai-chatbot' ),
+			__( 'The chat button sits in the bottom corner of whichever pages you choose. Visitors tap it to start a conversation.', 'hey-support-ai-chatbot' )
+		);
+		?>
 
-		<div class="hs-field">
-			<fieldset>
-				<legend class="screen-reader-text"><?php esc_html_e( 'Where it appears', 'hey-support-ai-chatbot' ); ?></legend>
-				<?php foreach ( $choices as $value => $label ) : ?>
-					<label class="hs-radio">
-						<input type="radio"
-							name="<?php echo esc_attr( HEY_SUPPORT_OPTION_KEY ); ?>[enable_on]"
-							value="<?php echo esc_attr( $value ); ?>"
-							<?php checked( $opts['enable_on'], $value ); ?> />
-						<?php echo esc_html( $label ); ?>
-					</label>
-				<?php endforeach; ?>
-			</fieldset>
-		</div>
+		<fieldset class="hs-choices">
+			<legend class="screen-reader-text"><?php esc_html_e( 'Where it appears', 'hey-support-ai-chatbot' ); ?></legend>
+			<?php foreach ( $choices as $value => $choice ) : ?>
+				<label class="hs-choice">
+					<input type="radio"
+						name="<?php echo esc_attr( HEY_SUPPORT_OPTION_KEY ); ?>[enable_on]"
+						value="<?php echo esc_attr( $value ); ?>"
+						<?php checked( $opts['enable_on'], $value ); ?> />
+					<span class="hs-choice-text">
+						<span class="hs-choice-title"><?php echo esc_html( $choice[0] ); ?></span>
+						<span class="hs-choice-note"><?php echo esc_html( $choice[1] ); ?></span>
+					</span>
+				</label>
+			<?php endforeach; ?>
+		</fieldset>
 
-		<div class="hs-field">
-			<label for="hey-support-exclude-search"><?php esc_html_e( 'Except on these pages', 'hey-support-ai-chatbot' ); ?></label>
+		<div class="hs-subfield" id="hs-exclusions">
+			<label class="hs-label" for="hey-support-exclude-search">
+				<?php esc_html_e( 'Except on these pages', 'hey-support-ai-chatbot' ); ?>
+			</label>
+			<p class="hs-help">
+				<?php esc_html_e( 'Add any page you would rather keep quiet, such as checkout or a landing page you are running ads to. Leave this empty to show the widget everywhere you chose above.', 'hey-support-ai-chatbot' ); ?>
+			</p>
 			<ul class="hs-chips" id="hey-support-chips"></ul>
 			<div class="hs-picker">
 				<input type="text" id="hey-support-exclude-search" class="regular-text"
 					autocomplete="off" role="combobox" aria-expanded="false"
 					aria-controls="hey-support-results"
-					placeholder="<?php echo esc_attr__( 'Search pages and posts by name', 'hey-support-ai-chatbot' ); ?>" />
+					placeholder="<?php echo esc_attr__( 'Start typing a page or post name', 'hey-support-ai-chatbot' ); ?>" />
 				<ul class="hs-results" id="hey-support-results" role="listbox"></ul>
 			</div>
+			<?php // Never disabled, even when the section is: a disabled input submits nothing, which would silently wipe the saved list. ?>
 			<input type="hidden" id="hey-support-exclude-ids"
 				name="<?php echo esc_attr( HEY_SUPPORT_OPTION_KEY ); ?>[exclude_ids]"
 				value="<?php echo esc_attr( $opts['exclude_ids'] ); ?>" />
-			<p class="description"><?php esc_html_e( 'Search by name. Leave empty to show it on everything above.', 'hey-support-ai-chatbot' ); ?></p>
+			<p class="hs-subfield-off">
+				<?php esc_html_e( 'Not used while the widget only appears where you place it yourself. Your list is kept.', 'hey-support-ai-chatbot' ); ?>
+			</p>
 		</div>
 	</div>
 	<?php
 }
 
-/** WooCommerce, in one card rather than two rows that read as unrelated. */
+/**
+ * WooCommerce, as two real sections rather than one paragraph with a bold line
+ * in the middle of it.
+ *
+ * They are genuinely different things -- one is public and needs no permission,
+ * the other mints a key and needs an explicit grant -- and the old card said so
+ * with a <strong>, which reads as an afterthought bolted onto the first.
+ */
 function hey_support_render_commerce_card(): void {
 	if ( ! class_exists( 'WooCommerce' ) ) {
 		return;
 	}
 	?>
 	<div class="hs-card">
-		<h2><?php esc_html_e( 'Your store', 'hey-support-ai-chatbot' ); ?></h2>
-		<p class="hs-card-desc">
-			<?php esc_html_e( 'Your agent can show real products from this store, with live prices and stock, and add them to the shopper\'s cart. No keys needed - it reads your public store data.', 'hey-support-ai-chatbot' ); ?>
-		</p>
-		<p>
-			<button type="button" class="button" id="hey-support-storefront-test">
-				<?php esc_html_e( 'Check my store is reachable', 'hey-support-ai-chatbot' ); ?>
-			</button>
-			<a class="button" target="_blank" rel="noopener"
-				href="<?php echo esc_url( HEY_SUPPORT_API_BASE . '/dashboard?connect=woocommerce_storefront&site_url=' . rawurlencode( home_url() ) ); ?>">
-				<?php esc_html_e( 'Manage in Hey Support', 'hey-support-ai-chatbot' ); ?>
-			</a>
-		</p>
-		<p class="description" id="hey-support-storefront-result"></p>
+		<?php
+		hey_support_card_head(
+			'dashicons-cart',
+			__( 'Your store', 'hey-support-ai-chatbot' ),
+			__( 'WooCommerce is active on this site, so your agent can help people shop as well as answer questions.', 'hey-support-ai-chatbot' )
+		);
+		?>
 
-		<p class="hs-card-desc" style="margin-top:18px;margin-bottom:6px;">
-			<strong><?php esc_html_e( 'Order lookups', 'hey-support-ai-chatbot' ); ?></strong><br />
-			<?php esc_html_e( 'Let your agent look up orders, update shipping and issue coupons. One approval in your own WooCommerce admin - the key is created and sent for you.', 'hey-support-ai-chatbot' ); ?>
-		</p>
-		<p>
-			<a class="button" target="_blank" rel="noopener"
-				href="<?php echo esc_url( HEY_SUPPORT_API_BASE . '/dashboard?connect=woocommerce&site_url=' . rawurlencode( home_url() ) ); ?>">
-				<?php esc_html_e( 'Set up order lookups', 'hey-support-ai-chatbot' ); ?>
-			</a>
-		</p>
+		<div class="hs-section">
+			<h3><?php esc_html_e( 'Product answers', 'hey-support-ai-chatbot' ); ?></h3>
+			<p class="hs-help">
+				<?php esc_html_e( 'Your agent shows real products from this store with live prices and stock, and can add them to the shopper\'s basket. No keys and no setup - it reads the public store data any visitor can already see.', 'hey-support-ai-chatbot' ); ?>
+			</p>
+			<p class="hs-row">
+				<a class="button button-primary" target="_blank" rel="noopener"
+					href="<?php echo esc_url( HEY_SUPPORT_API_BASE . '/dashboard?connect=woocommerce_storefront&site_url=' . rawurlencode( home_url() ) ); ?>">
+					<?php esc_html_e( 'Turn on product answers', 'hey-support-ai-chatbot' ); ?>
+				</a>
+				<button type="button" class="button" id="hey-support-storefront-test">
+					<?php esc_html_e( 'Test this site first', 'hey-support-ai-chatbot' ); ?>
+				</button>
+			</p>
+			<p class="hs-result" id="hey-support-storefront-result" role="status"></p>
+		</div>
+
+		<div class="hs-section">
+			<h3><?php esc_html_e( 'Order lookups', 'hey-support-ai-chatbot' ); ?></h3>
+			<p class="hs-help">
+				<?php esc_html_e( 'Let your agent answer "where is my order?", update a shipping address and issue a coupon. This one needs your permission because it reads customer orders: you approve it once in your own WooCommerce admin and the key is created and sent for you.', 'hey-support-ai-chatbot' ); ?>
+			</p>
+			<p class="hs-row">
+				<a class="button" target="_blank" rel="noopener"
+					href="<?php echo esc_url( HEY_SUPPORT_API_BASE . '/dashboard?connect=woocommerce&site_url=' . rawurlencode( home_url() ) ); ?>">
+					<?php esc_html_e( 'Set up order lookups', 'hey-support-ai-chatbot' ); ?>
+				</a>
+			</p>
+		</div>
 	</div>
 	<?php
 }
 
 function hey_support_render_advanced_card( array $opts ): void {
 	?>
-	<div class="hs-card">
+	<div class="hs-card hs-card-flush">
 		<details class="hs-advanced">
-			<summary><?php esc_html_e( 'Advanced', 'hey-support-ai-chatbot' ); ?></summary>
+			<summary>
+				<span class="dashicons dashicons-admin-generic" aria-hidden="true"></span>
+				<span><?php esc_html_e( 'Advanced', 'hey-support-ai-chatbot' ); ?></span>
+				<span class="hs-summary-note"><?php esc_html_e( 'Identity, auto-open, shortcode, disconnect', 'hey-support-ai-chatbot' ); ?></span>
+			</summary>
 
-			<div class="hs-field">
-				<?php hey_support_chatbot_id_input( (string) $opts['chatbot_id'] ); ?>
-				<p class="description"><?php esc_html_e( 'Set for you when you connect. Change it only if support asks you to.', 'hey-support-ai-chatbot' ); ?></p>
-			</div>
+			<div class="hs-advanced-body">
+				<div class="hs-field">
+					<span class="hs-label"><?php esc_html_e( 'Chatbot ID', 'hey-support-ai-chatbot' ); ?></span>
+					<p class="hs-help"><?php esc_html_e( 'Which agent this site is linked to. Set for you when you connect, and safe to share - it is visible in your site\'s page source. Change it only if support asks you to.', 'hey-support-ai-chatbot' ); ?></p>
+					<div class="hs-copyrow">
+						<code><?php echo esc_html( (string) $opts['chatbot_id'] ); ?></code>
+						<button type="button" class="button button-small hs-copy"
+							data-copy="<?php echo esc_attr( (string) $opts['chatbot_id'] ); ?>">
+							<?php esc_html_e( 'Copy', 'hey-support-ai-chatbot' ); ?>
+						</button>
+						<button type="button" class="button-link hs-edit-toggle"
+							aria-expanded="false" aria-controls="hs-id-edit">
+							<?php esc_html_e( 'Edit', 'hey-support-ai-chatbot' ); ?>
+						</button>
+					</div>
+					<?php
+					// `hidden` on the wrapper does not stop the input submitting -- only
+					// `disabled` would -- so this one field carries the value whether the
+					// section is open or shut. A second hidden mirror would have been the
+					// bug: two inputs of the same name means the last one wins, so the
+					// mirror would have silently overwritten every edit.
+					?>
+					<div class="hs-id-edit" id="hs-id-edit" hidden>
+						<?php hey_support_chatbot_id_input( (string) $opts['chatbot_id'] ); ?>
+					</div>
+				</div>
 
-			<div class="hs-field">
-				<label for="hey_support_auto_open"><?php esc_html_e( 'Auto-open', 'hey-support-ai-chatbot' ); ?></label>
-				<label class="hs-radio">
-					<input type="checkbox" id="hey_support_auto_open"
-						name="<?php echo esc_attr( HEY_SUPPORT_OPTION_KEY ); ?>[auto_open]"
-						value="1" <?php checked( ! empty( $opts['auto_open'] ) ); ?> />
-					<?php esc_html_e( 'Open the chat automatically shortly after the page loads.', 'hey-support-ai-chatbot' ); ?>
-				</label>
-				<p class="description"><?php esc_html_e( 'Off is usually better. Opening on its own interrupts whatever the visitor came to do.', 'hey-support-ai-chatbot' ); ?></p>
-			</div>
+				<div class="hs-field">
+					<span class="hs-label"><?php esc_html_e( 'Opening behaviour', 'hey-support-ai-chatbot' ); ?></span>
+					<label class="hs-check">
+						<input type="checkbox" id="hey_support_auto_open"
+							name="<?php echo esc_attr( HEY_SUPPORT_OPTION_KEY ); ?>[auto_open]"
+							value="1" <?php checked( ! empty( $opts['auto_open'] ) ); ?> />
+						<span><?php esc_html_e( 'Open the chat by itself a moment after the page loads', 'hey-support-ai-chatbot' ); ?></span>
+					</label>
+					<p class="hs-help"><?php esc_html_e( 'Off is usually better. Opening on its own interrupts whatever the visitor came to do, and the chat button is already hard to miss.', 'hey-support-ai-chatbot' ); ?></p>
+				</div>
 
-			<div class="hs-field">
-				<label><?php esc_html_e( 'Place it yourself', 'hey-support-ai-chatbot' ); ?></label>
-				<p class="hs-inline-note">
-					<?php esc_html_e( 'Use the Hey Support block, or this shortcode:', 'hey-support-ai-chatbot' ); ?>
-					<code>[hey_support]</code>
-				</p>
+				<div class="hs-field">
+					<span class="hs-label"><?php esc_html_e( 'Place it yourself', 'hey-support-ai-chatbot' ); ?></span>
+					<p class="hs-help"><?php esc_html_e( 'Add the Hey Support block in the editor, or paste this shortcode. Either one loads the widget on that page even when you have chosen "Only where I place it" above.', 'hey-support-ai-chatbot' ); ?></p>
+					<div class="hs-copyrow">
+						<code>[hey_support]</code>
+						<button type="button" class="button button-small hs-copy" data-copy="[hey_support]">
+							<?php esc_html_e( 'Copy', 'hey-support-ai-chatbot' ); ?>
+						</button>
+					</div>
+				</div>
+
+				<div class="hs-field hs-danger">
+					<span class="hs-label"><?php esc_html_e( 'Disconnect', 'hey-support-ai-chatbot' ); ?></span>
+					<p class="hs-help"><?php esc_html_e( 'Unlink this site from the agent and stop showing the chat widget. Your conversations, leads and settings in Hey Support are untouched, and you can connect again at any time.', 'hey-support-ai-chatbot' ); ?></p>
+					<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="hs-inline-form">
+						<input type="hidden" name="action" value="hey_support_disconnect" />
+						<?php wp_nonce_field( 'hey_support_disconnect' ); ?>
+						<button type="submit" class="button hs-disconnect">
+							<?php esc_html_e( 'Disconnect this site', 'hey-support-ai-chatbot' ); ?>
+						</button>
+					</form>
+				</div>
 			</div>
 		</details>
 	</div>
@@ -444,7 +596,7 @@ function hey_support_render_advanced_card( array $opts ): void {
 
 function hey_support_chatbot_id_input( string $value ): void {
 	?>
-	<label for="hey_support_chatbot_id"><?php esc_html_e( 'Chatbot ID', 'hey-support-ai-chatbot' ); ?></label>
+	<label class="screen-reader-text" for="hey_support_chatbot_id"><?php esc_html_e( 'Chatbot ID', 'hey-support-ai-chatbot' ); ?></label>
 	<input type="text" id="hey_support_chatbot_id"
 		name="<?php echo esc_attr( HEY_SUPPORT_OPTION_KEY ); ?>[chatbot_id]"
 		value="<?php echo esc_attr( $value ); ?>" class="regular-text"
@@ -471,13 +623,16 @@ function hey_support_flush_connect_result(): void {
 
 /** One line per outcome, naming the fix where there is one. */
 function hey_support_connect_result_notice( string $code, string $name ): void {
-	$ok = 'ok' === $code;
+	$ok = 'ok' === $code || 'disconnected' === $code;
 	switch ( $code ) {
 		case 'ok':
 			$message = '' !== $name
 				/* translators: %s: the connected agent's name. */
 				? sprintf( __( 'Connected to %s. Your agent is live on this site.', 'hey-support-ai-chatbot' ), $name )
 				: __( 'Connected. Your agent is live on this site.', 'hey-support-ai-chatbot' );
+			break;
+		case 'disconnected':
+			$message = __( 'Disconnected. The chat widget is no longer shown on this site.', 'hey-support-ai-chatbot' );
 			break;
 		case 'expired':
 			$message = __( 'That connect link had expired. Press Connect to try again.', 'hey-support-ai-chatbot' );
@@ -563,7 +718,7 @@ function hey_support_ajax_storefront_test(): void {
 	wp_send_json_success(
 		[
 			/* translators: %d: number of published products. */
-			'message' => sprintf( _n( 'Ready - %d product visible.', 'Ready - %d products visible.', $total, 'hey-support-ai-chatbot' ), $total ),
+			'message' => sprintf( _n( 'Ready - %d product is visible to your agent.', 'Ready - %d products are visible to your agent.', $total, 'hey-support-ai-chatbot' ), $total ),
 		]
 	);
 }
