@@ -1,4 +1,4 @@
-=== Hey Support: AI Chatbot ===
+=== Hey Support: AI Sales & Shopping Agent ===
 Contributors: grandworksco, siddr, wazidshah
 Tags: ai, chatbot, live-chat, customer-service, woocommerce
 Requires at least: 6.5
@@ -8,7 +8,7 @@ Stable tag: 2.0.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Drop-in AI chatbot widget that trains on your content, captures leads, and hands off to humans. Auto-detects WooCommerce.
+AI agent that answers from your content, shows live products from your store, captures leads, and hands off to a human. Detects WooCommerce.
 
 == Description ==
 

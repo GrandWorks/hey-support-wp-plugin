@@ -1,4 +1,4 @@
-# Hey Support: AI Chatbot — WordPress plugin
+# Hey Support: AI Sales & Shopping Agent — WordPress plugin
 
 The official WordPress plugin for [Hey Support](https://hey.support). Drops an AI
 chat widget onto any WordPress site, and forwards store and customer context

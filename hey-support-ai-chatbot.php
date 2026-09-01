@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name:       Hey Support: AI Chatbot
+ * Plugin Name:       Hey Support: AI Sales & Shopping Agent
  * Plugin URI:        https://hey.support
  * Description:       Drop-in AI chatbot widget for WordPress sites. Trains on your content, captures leads, hands off to humans. Auto-detects WooCommerce and forwards customer + cart context into the conversation.
  * Version:           2.0.0
