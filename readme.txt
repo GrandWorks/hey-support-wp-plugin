@@ -1,6 +1,6 @@
 === Hey Support: AI Sales & Shopping Agent ===
 Contributors: grandworksco, siddr, wazidshah
-Tags: ai, chatbot, live-chat, customer-service, woocommerce
+Tags: ai, chatbot, ecommerce, woocommerce, live-chat
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 7.4
