@@ -1,0 +1,33 @@
+name: Update WordPress.org assets
+
+# Assets live in SVN /assets, NOT in a release tag, and WordPress.org serves
+# them independently of any version. So icons, banners and screenshots can be
+# corrected without shipping a release nobody needs -- which is the whole
+# reason this is a second workflow rather than more steps in deploy.yml.
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.wordpress-org/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  assets:
+    name: Push assets to WordPress.org
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Update the plugin's assets
+        uses: 10up/action-wordpress-plugin-asset-update@stable
+        env:
+          SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
+          SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
+          # Same reason as deploy.yml: the action defaults SLUG to the
+          # REPOSITORY name, which is not the WordPress.org slug.
+          SLUG: hey-support-ai-chatbot
+          ASSETS_DIR: .wordpress-org

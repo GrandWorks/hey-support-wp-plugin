@@ -143,7 +143,7 @@ Yes. Sign up at https://hey.support and start on the Free plan. Paid plans are o
 2. The connect screen before an agent is chosen.
 3. Choosing an agent on Hey Support.
 4. Hiding the widget on chosen pages, by name.
-5. Store settings, with live products in chat.
+5. Live products from your store, shown in chat with add to cart.
 6. The Hey Support block in the editor.
 
 == Changelog ==
