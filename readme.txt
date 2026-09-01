@@ -149,6 +149,7 @@ Yes. Sign up at https://hey.support and start on the Free plan. Paid plans are o
 == Changelog ==
 
 = 2.0.0 =
+* Renamed to "Hey Support: AI Sales & Shopping Agent". Same plugin and the same settings -- the name now says what it does on a store. Nothing to reinstall or reconnect.
 * One-click connect. Press Connect, pick your agent on Hey Support, and land back here connected. No chatbot ID to find and nothing to paste, on every plan.
 * Rebuilt the settings screen. Before you connect it asks one thing; afterwards it shows where the widget appears, your store, and an Advanced section for everything else.
 * "Hide on these post IDs" is now a search-by-name picker. WordPress never showed you post IDs, so finding them meant hunting through URLs. Your existing choices are kept exactly as they were.
@@ -177,7 +178,7 @@ Yes. Sign up at https://hey.support and start on the Free plan. Paid plans are o
 == Upgrade Notice ==
 
 = 2.0.0 =
-Connecting is now one click: press Connect and pick your agent. Your existing settings, including which pages the widget is hidden on, are kept.
+Connecting is now one click: press Connect and pick your agent. Your existing settings, including which pages the widget is hidden on, are kept. The plugin is also renamed to "Hey Support: AI Sales & Shopping Agent".
 
 = 1.1.0 =
 Live products in chat for WooCommerce, a one-approval AI Actions connection, and a store reachability check. Fixes an admin script that could stay cached from 1.0.0.
