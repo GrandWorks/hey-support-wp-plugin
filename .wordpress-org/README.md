@@ -1,7 +1,19 @@
 # Listing assets
 
-Synced to WordPress.org SVN `/assets` on every tagged deploy. Currently empty --
-the live listing has no icon, banner or screenshots.
+Synced to WordPress.org SVN `/assets` on every tagged deploy.
+
+Icons and banners are PRESENT. Screenshots are still pending -- see the Screenshots
+section of readme.txt for the order they must match.
+
+Both icons and both banners are GENERATED, not drawn: `icon.svg` and the banners
+compose the logo's own vector paths, pulled out of `components/ui/logo.tsx` in the
+main repo by regex. Never retype path data -- breaking it on whitespace silently
+corrupts the shape. Regenerate rather than edit.
+
+The icon sits on ink `#1F1E1B` deliberately. These render at 128px in a grid of
+mostly pastel plugin tiles on a white page, and the brand's own cream would have
+almost no separation there; ink gives contrast and lets the mint read. White on
+mint inside the bubble is the logo's own sanctioned usage.
 
 Required:
 
