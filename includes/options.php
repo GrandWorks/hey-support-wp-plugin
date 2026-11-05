@@ -25,12 +25,15 @@ const HEY_SUPPORT_OPTION_KEY = 'hey_support_settings';
  */
 function hey_support_default_options(): array {
 	return [
-		'api_token'    => '',
-		'chatbot_id'   => '',
-		'chatbot_name' => '',       // display only; written by connect, never by a form
-		'enable_on'    => 'all',    // all | posts | pages | shortcode-only
-		'exclude_ids'  => '',       // comma-separated post IDs
-		'auto_open'    => false,
+		'api_token'            => '',
+		'chatbot_id'           => '',
+		'chatbot_name'         => '',       // display only; written by connect, never by a form
+		'enable_on'            => 'all',    // all | posts | pages | shortcode-only
+		'exclude_ids'          => '',       // comma-separated post IDs
+		'auto_open'            => false,
+		// WooCommerce: show the WhatsApp order updates checkbox at checkout.
+		// Off until the merchant turns it on.
+		'whatsapp_order_optin' => false,
 	];
 }
 
@@ -101,11 +104,27 @@ function hey_support_sanitize_options( $input ): array {
 
 	$out['auto_open'] = ! empty( $input['auto_open'] );
 
+	$out['whatsapp_order_optin'] = ! empty( $input['whatsapp_order_optin'] );
+
 	$raw_excludes       = isset( $input['exclude_ids'] ) ? sanitize_textarea_field( $input['exclude_ids'] ) : '';
 	$ids                = array_filter( array_map( 'absint', preg_split( '/[\s,]+/', $raw_excludes ) ) );
 	$out['exclude_ids'] = implode( ',', array_unique( $ids ) );
 
 	return $out;
+}
+
+/**
+ * Whether checkout should offer the WhatsApp order updates box.
+ *
+ * Needs the merchant's "Offer WhatsApp order updates at checkout" setting (off by
+ * default) AND a connected agent. The setting lives in a card that is only shown
+ * while connected, so a site that disconnects could not otherwise turn the box
+ * off, and shoppers would keep being offered updates nothing can send. The saved
+ * setting survives a disconnect, like the placement settings do.
+ */
+function hey_support_whatsapp_optin_enabled(): bool {
+	$opts = hey_support_get_options();
+	return ! empty( $opts['whatsapp_order_optin'] ) && '' !== (string) $opts['chatbot_id'];
 }
 
 /**

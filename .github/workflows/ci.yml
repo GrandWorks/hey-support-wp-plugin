@@ -25,6 +25,8 @@ jobs:
           coverage: none
       - name: Lint every PHP file
         run: find . -path ./vendor -prune -o -name '*.php' -print0 | xargs -0 -n1 -P4 php -l
+      - name: Behaviour tests
+        run: for f in tests/*-test.php; do php "$f" || exit 1; done
 
   coding-standards:
     name: PHPCS / WPCS

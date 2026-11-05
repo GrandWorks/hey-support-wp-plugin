@@ -18,12 +18,20 @@
  * per-request by construction, and reading the Store API instead of scraping
  * theme markup means the totals are authoritative on every theme.
  *
+ * Separately, the WhatsApp order updates opt-in: an optional checkout box that
+ * records a shopper's consent on the order. It is off until the merchant turns it
+ * on, and it sends nothing itself. The Hey Support server reads the two order meta
+ * keys through the store connection the merchant set up.
+ *
  * @package HeySupport
  */
 
 defined( 'ABSPATH' ) || exit;
 
-const HEY_SUPPORT_WOO_BRIDGE_HANDLE = 'hey-support-ai-chatbot-woo-bridge';
+const HEY_SUPPORT_WOO_BRIDGE_HANDLE      = 'hey-support-ai-chatbot-woo-bridge';
+const HEY_SUPPORT_WHATSAPP_OPTIN_META    = '_hey_support_whatsapp_optin';
+const HEY_SUPPORT_WHATSAPP_OPTIN_AT_META = '_hey_support_whatsapp_optin_at';
+const HEY_SUPPORT_WHATSAPP_OPTIN_FIELD   = 'hey-support/whatsapp-optin';
 
 // Must be registered at load time - `before_woocommerce_init` fires earlier than
 // `woocommerce_loaded`. Without it WooCommerce warns store owners that the
@@ -49,6 +57,221 @@ function hey_support_woocommerce_boot(): void {
 	add_action( 'wp_enqueue_scripts', 'hey_support_register_woo_bridge' );
 	add_action( 'hey_support_embed_enqueued', 'hey_support_enqueue_woo_bridge' );
 	add_action( 'template_redirect', 'hey_support_woo_cache_guard' );
+
+	// WhatsApp order updates opt-in, only when the merchant turned on "Offer
+	// WhatsApp order updates at checkout" (off by default). Classic and block
+	// checkout both end in the same two order meta keys, because that is all the
+	// Hey Support server reads.
+	if ( hey_support_whatsapp_optin_enabled() ) {
+		add_action( 'woocommerce_review_order_before_submit', 'hey_support_render_whatsapp_optin' );
+		add_action( 'woocommerce_checkout_create_order', 'hey_support_save_classic_whatsapp_optin', 10, 2 );
+		add_action( 'woocommerce_init', 'hey_support_register_block_whatsapp_optin' );
+		add_action( 'woocommerce_store_api_checkout_update_order_from_request', 'hey_support_save_block_whatsapp_optin', 10, 2 );
+	}
+}
+
+/**
+ * True when the store collects a billing phone number. The order's billing phone
+ * is the number order updates go to, so without it the box would promise
+ * something the server cannot deliver.
+ */
+function hey_support_store_collects_phone(): bool {
+	// Block checkout: the phone field is an address setting.
+	if ( 'hidden' === get_option( 'woocommerce_checkout_phone_field', 'required' ) ) {
+		return false;
+	}
+	// Classic checkout: the field list is filterable, so ask it rather than guess.
+	if ( function_exists( 'WC' ) && is_object( WC() ) && is_object( WC()->checkout() ) ) {
+		$billing = WC()->checkout()->get_checkout_fields( 'billing' );
+		return is_array( $billing ) && isset( $billing['billing_phone'] );
+	}
+	return false;
+}
+
+/**
+ * Record consent on the order. Called only when the box was ticked, so an
+ * order that was never ticked carries no trace. The time is refreshed on every
+ * tick: WooCommerce reuses one order across payment attempts, and the latest
+ * tick is the one the shopper just made.
+ *
+ * @param object $order WC_Order (or any object with the meta methods).
+ */
+function hey_support_record_whatsapp_optin( $order ): void {
+	if ( ! is_object( $order ) || ! method_exists( $order, 'update_meta_data' ) ) {
+		return;
+	}
+	$order->update_meta_data( HEY_SUPPORT_WHATSAPP_OPTIN_META, 'yes' );
+	$order->update_meta_data( HEY_SUPPORT_WHATSAPP_OPTIN_AT_META, gmdate( 'Y-m-d\TH:i:s\Z' ) );
+}
+
+/**
+ * Withdraw consent recorded by an earlier attempt. WooCommerce reuses the same
+ * order across payment attempts (the session's order awaiting payment on the
+ * classic checkout, the draft order on the block checkout), so a shopper who
+ * ticks the box, has a payment fail, then unticks it and pays must not keep the
+ * earlier tick.
+ *
+ * @param object $order WC_Order (or any object with the meta methods).
+ */
+function hey_support_revoke_whatsapp_optin( $order ): void {
+	if ( ! is_object( $order ) || ! method_exists( $order, 'delete_meta_data' ) ) {
+		return;
+	}
+	$order->delete_meta_data( HEY_SUPPORT_WHATSAPP_OPTIN_META );
+	$order->delete_meta_data( HEY_SUPPORT_WHATSAPP_OPTIN_AT_META );
+}
+
+/**
+ * Whether a submitted checkbox value means ticked.
+ *
+ * @param mixed $value Raw value from a form post or the Store API.
+ */
+function hey_support_optin_value_is_ticked( $value ): bool {
+	return true === $value || 1 === $value || '1' === $value || 'yes' === $value || 'true' === $value || 'on' === $value;
+}
+
+/**
+ * Classic checkout: the box, unticked by default. A checkout refresh (changing
+ * the country, say) re-renders this area, so a tick already made is carried
+ * through the refresh from the posted form data, the way WooCommerce does for
+ * its own terms box.
+ */
+function hey_support_render_whatsapp_optin(): void {
+	if ( ! hey_support_whatsapp_optin_enabled() ) {
+		return;
+	}
+	if ( ! hey_support_store_collects_phone() ) {
+		return;
+	}
+
+	$is_ticked = false;
+	// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Read-only: this re-renders the box during the update_order_review AJAX refresh, which WooCommerce nonce-checks itself before the checkout fragments are built.
+	if ( isset( $_POST['post_data'] ) && is_string( $_POST['post_data'] ) ) {
+		$posted = [];
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Parsed into an array and only tested for presence.
+		wp_parse_str( wp_unslash( $_POST['post_data'] ), $posted );
+		$is_ticked = ! empty( $posted['hey_support_whatsapp_optin'] );
+	}
+	$ticked_attr = $is_ticked ? ' checked="checked"' : '';
+	?>
+	<p class="form-row hey-support-whatsapp-optin">
+		<label class="woocommerce-form__label woocommerce-form__label-for-checkbox checkbox">
+			<input type="checkbox" class="woocommerce-form__input woocommerce-form__input-checkbox input-checkbox" name="hey_support_whatsapp_optin" id="hey_support_whatsapp_optin" value="1"<?php echo $ticked_attr; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Fixed literal chosen above. ?> />
+			<span><?php echo esc_html__( 'Send me order updates on WhatsApp', 'hey-support-ai-chatbot' ); ?></span>
+		</label>
+	</p>
+	<?php
+}
+
+/**
+ * Classic checkout: save on order creation. This runs on every submit, so an
+ * absent or empty box is an explicit untick and withdraws any earlier tick on a
+ * reused order. WooCommerce has already verified the checkout nonce by the time
+ * this runs.
+ *
+ * @param object              $order WC_Order being created.
+ * @param array<string,mixed> $data  Posted checkout data (unused).
+ */
+// Action signature: registered with add_action( ..., 10, 2 ).
+// phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed
+function hey_support_save_classic_whatsapp_optin( $order, $data = [] ): void {
+	if ( ! hey_support_whatsapp_optin_enabled() ) {
+		return;
+	}
+	// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Checkout nonce is verified by WooCommerce before this action fires.
+	if ( empty( $_POST['hey_support_whatsapp_optin'] ) ) {
+		hey_support_revoke_whatsapp_optin( $order );
+		return;
+	}
+	if ( ! hey_support_store_collects_phone() ) {
+		return;
+	}
+	hey_support_record_whatsapp_optin( $order );
+}
+
+/**
+ * Block checkout (WooCommerce 8.9+): an optional checkbox in the order section.
+ * The block checkout stores its own value under its own meta key, which the
+ * Hey Support server does not read; hey_support_save_block_whatsapp_optin()
+ * copies it into the canonical keys.
+ */
+function hey_support_register_block_whatsapp_optin(): void {
+	if ( ! hey_support_whatsapp_optin_enabled() ) {
+		return;
+	}
+	if ( ! function_exists( 'woocommerce_register_additional_checkout_field' ) ) {
+		return;
+	}
+	if ( 'hidden' === get_option( 'woocommerce_checkout_phone_field', 'required' ) ) {
+		return;
+	}
+	woocommerce_register_additional_checkout_field(
+		[
+			'id'       => HEY_SUPPORT_WHATSAPP_OPTIN_FIELD,
+			// Plain translated text: the blocks checkout renders the label as React text, so escaped entities would show literally.
+			'label'    => __( 'Send me order updates on WhatsApp', 'hey-support-ai-chatbot' ),
+			'location' => 'order',
+			'type'     => 'checkbox',
+			'required' => false,
+		]
+	);
+}
+
+/**
+ * Block checkout: read the field's value and write the canonical keys. A
+ * request that carries the field unticked withdraws any earlier tick on the
+ * reused draft order; a request that omits the field leaves the order's meta as
+ * it is.
+ *
+ * @param object $order   WC_Order being updated from the request.
+ * @param mixed  $request The Store API request.
+ */
+function hey_support_save_block_whatsapp_optin( $order, $request = null ): void {
+	if ( ! hey_support_whatsapp_optin_enabled() ) {
+		return;
+	}
+	// The submitted value, when the request carries the field.
+	if ( is_object( $request ) && ( $request instanceof \ArrayAccess ) ) {
+		$fields = $request['additional_fields'] ?? null;
+		if ( is_array( $fields ) && array_key_exists( HEY_SUPPORT_WHATSAPP_OPTIN_FIELD, $fields ) ) {
+			if ( hey_support_optin_value_is_ticked( $fields[ HEY_SUPPORT_WHATSAPP_OPTIN_FIELD ] ) ) {
+				hey_support_record_whatsapp_optin( $order );
+			} else {
+				hey_support_revoke_whatsapp_optin( $order );
+			}
+			return;
+		}
+	}
+
+	// The request did not carry it: fall back to the value WooCommerce stored on
+	// the order. A stored tick is recorded; nothing here ever withdraws one.
+	if ( is_object( $order ) && hey_support_optin_value_is_ticked( hey_support_stored_block_optin_value( $order ) ) ) {
+		hey_support_record_whatsapp_optin( $order );
+	}
+}
+
+/**
+ * The block checkout's own stored value for the field, or null when it cannot
+ * be read (older WooCommerce, or the blocks package is not loaded).
+ *
+ * @param object $order WC_Order.
+ * @return mixed
+ */
+function hey_support_stored_block_optin_value( $order ) {
+	$package = '\\Automattic\\WooCommerce\\Blocks\\Package';
+	$fields  = '\\Automattic\\WooCommerce\\Blocks\\Domain\\Services\\CheckoutFields';
+	if ( ! class_exists( $package ) || ! class_exists( $fields ) ) {
+		return null;
+	}
+	try {
+		$service = $package::container()->get( $fields );
+		if ( ! is_object( $service ) || ! method_exists( $service, 'get_field_from_object' ) ) {
+			return null;
+		}
+		return $service->get_field_from_object( HEY_SUPPORT_WHATSAPP_OPTIN_FIELD, $order, 'other' );
+	} catch ( \Throwable $e ) {
+		return null;
+	}
 }
 
 /**

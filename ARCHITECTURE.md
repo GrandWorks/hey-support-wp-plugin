@@ -26,7 +26,7 @@ one row to clean (per blog on multisite).
 | `includes/options.php` | Option shape, defaults, sanitize, masking |
 | `includes/embed.php` | The enqueue + `data-*` attributes. Read the docblock |
 | `includes/shortcode.php` · `gutenberg-block.php` | Two of the three surfaces |
-| `includes/woocommerce.php` | Store context + the runtime cart bridge |
+| `includes/woocommerce.php` | Store context, the runtime cart bridge, the WhatsApp opt-in |
 | `includes/api-client.php` | Bearer GETs against the Hey Support v1 API |
 | `admin/settings-page.php` · `settings.js` | The settings screen and its AJAX |
 
@@ -102,6 +102,23 @@ on the server, not "no token" — treating it as absent is what made Verify repo
 The token is never printed into a page. The embed carries only the public
 chatbot ID.
 
+### The WhatsApp opt-in writes two meta keys, and the server reads exactly those
+
+`_hey_support_whatsapp_optin = 'yes'` and `_hey_support_whatsapp_optin_at` (ISO
+8601 UTC). The Hey Support server reads them from the order over the WooCommerce
+REST API as the shopper's consent, so **renaming either one silently stops every
+update**. Both checkouts must end in these keys; the block checkout stores its own
+value elsewhere, which is why it is copied across.
+
+WooCommerce reuses one order across payment attempts, so an explicit untick has to
+delete the keys, or a shopper who ticks, has a payment fail, then unticks and pays
+keeps the old tick. A block request that omits the field withdraws nothing.
+
+The box is off unless the merchant turned on the setting AND an agent is connected.
+The setting's card only renders while connected, so without the second half a
+disconnected site could never turn the box off.
+`tests/whatsapp-optin-test.php` pins all of this; run it with `php`.
+
 ### `readme.txt`'s "External services" section is a listing requirement
 
 Not documentation. The approval email flags permanent removal for *"tracking
@@ -133,8 +150,8 @@ WordPress.org serves.
 
 ## Testing and release
 
-CI on every PR: `php -l` across 7.4–8.3, PHPCS/WPCS, the official Plugin Check
-action, and the ASCII gate. The approval email itself recommends PHPCS+WPCS and
+CI on every PR: `php -l` across 7.4–8.3, the behaviour tests in `tests/`,
+PHPCS/WPCS, the official Plugin Check action, and the ASCII gate. The approval email itself recommends PHPCS+WPCS and
 Plugin Check, so this is the reviewer's own advice automated.
 
 Release: bump the three versions, add an `== Upgrade Notice ==` entry, bump

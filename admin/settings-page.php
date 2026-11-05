@@ -221,7 +221,7 @@ function hey_support_render_settings_page(): void {
 			<form method="post" action="options.php">
 				<?php settings_fields( 'hey_support_settings_group' ); ?>
 				<?php hey_support_render_placement_card( $opts ); ?>
-				<?php hey_support_render_commerce_card(); ?>
+				<?php hey_support_render_commerce_card( $opts ); ?>
 				<?php hey_support_render_advanced_card( $opts ); ?>
 				<div class="hs-actions">
 					<?php submit_button( __( 'Save changes', 'hey-support-ai-chatbot' ), 'primary', 'submit', false ); ?>
@@ -471,14 +471,17 @@ function hey_support_render_placement_card( array $opts ): void {
 }
 
 /**
- * WooCommerce, as two real sections rather than one paragraph with a bold line
- * in the middle of it.
+ * WooCommerce, as real sections rather than one paragraph with a bold line in the
+ * middle of it.
  *
  * They are genuinely different things -- one is public and needs no permission,
- * the other mints a key and needs an explicit grant -- and the old card said so
- * with a <strong>, which reads as an afterthought bolted onto the first.
+ * another mints a key and needs an explicit grant, and the last changes what
+ * shoppers see at checkout -- and the old card said so with a <strong>, which
+ * reads as an afterthought bolted onto the first.
+ *
+ * @param array<string, mixed> $opts Merged settings.
  */
-function hey_support_render_commerce_card(): void {
+function hey_support_render_commerce_card( array $opts ): void {
 	if ( ! class_exists( 'WooCommerce' ) ) {
 		return;
 	}
@@ -519,6 +522,19 @@ function hey_support_render_commerce_card(): void {
 					href="<?php echo esc_url( HEY_SUPPORT_API_BASE . '/dashboard?connect=woocommerce&site_url=' . rawurlencode( home_url() ) ); ?>">
 					<?php esc_html_e( 'Set up order lookups', 'hey-support-ai-chatbot' ); ?>
 				</a>
+			</p>
+		</div>
+
+		<div class="hs-section">
+			<h3><?php esc_html_e( 'WhatsApp order updates', 'hey-support-ai-chatbot' ); ?></h3>
+			<label class="hs-check">
+				<input type="checkbox" id="hey_support_whatsapp_order_optin"
+					name="<?php echo esc_attr( HEY_SUPPORT_OPTION_KEY ); ?>[whatsapp_order_optin]"
+					value="1" <?php checked( ! empty( $opts['whatsapp_order_optin'] ) ); ?> />
+				<span><?php esc_html_e( 'Offer WhatsApp order updates at checkout', 'hey-support-ai-chatbot' ); ?></span>
+			</label>
+			<p class="hs-help">
+				<?php esc_html_e( 'Adds an unticked "Send me order updates on WhatsApp" box to checkout. Turn this on once order updates are set up for your WhatsApp number in Hey Support. Shown only when your checkout asks for a phone number.', 'hey-support-ai-chatbot' ); ?>
 			</p>
 		</div>
 	</div>

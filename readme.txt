@@ -4,7 +4,7 @@ Tags: ai, chatbot, ecommerce, woocommerce, live-chat
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 2.0.0
+Stable tag: 2.1.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -68,6 +68,12 @@ The plugin communicates with Hey Support in the following ways:
   store URL and currency, the current cart total and item count, and - only when
   the shopper is logged in - the customer ID, customer email, and last order ID
   and status, so the chatbot can answer order- and cart-related questions.
+* WhatsApp order updates (only when you turn on "Offer WhatsApp order updates at
+  checkout"): a shopper who ticks the checkout box has that choice and the time
+  stored on their order. The plugin itself sends nothing more. Hey Support reads
+  the order, including the billing phone number and name, through the WooCommerce
+  connection you set up under "Order lookups", and sends the updates to that number
+  from your own WhatsApp Business number through Meta's WhatsApp Business Platform.
 * Connecting your agent: when you press "Connect to Hey Support", your site
   address, site name and whether WooCommerce is active are sent to Hey Support
   so it can show you your agents and confirm which site is being connected. Hey
@@ -148,6 +154,9 @@ Yes. Sign up at https://hey.support and start on the Free plan. Paid plans are o
 
 == Changelog ==
 
+= 2.1.0 =
+* New optional checkbox at WooCommerce checkout, "Send me order updates on WhatsApp", for stores that collect a billing phone number. It is off by default: the store owner turns it on with the new "Offer WhatsApp order updates at checkout" setting under Your store, and until then checkout is unchanged. Once on, it works on both the classic and the block checkout, starts unticked, and is recorded on the order as the customer's consent. Orders are unchanged when it is left unticked.
+
 = 2.0.0 =
 * Renamed to "Hey Support: AI Sales & Shopping Agent". Same plugin and the same settings -- the name now says what it does on a store. Nothing to reinstall or reconnect.
 * One-click connect. Press Connect, pick your agent on Hey Support, and land back here connected. No chatbot ID to find and nothing to paste, on every plan.
@@ -176,6 +185,9 @@ Yes. Sign up at https://hey.support and start on the Free plan. Paid plans are o
 * Verify-token and refresh-chatbot-list helpers for workspaces on plans that include public API access.
 
 == Upgrade Notice ==
+
+= 2.1.0 =
+Adds an optional WhatsApp order updates checkbox at WooCommerce checkout, off until you turn it on in Settings > Hey Support.
 
 = 2.0.0 =
 Connecting is now one click: press Connect and pick your agent. Your existing settings, including which pages the widget is hidden on, are kept. The plugin is also renamed to "Hey Support: AI Sales & Shopping Agent".

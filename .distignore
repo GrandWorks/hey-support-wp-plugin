@@ -14,6 +14,7 @@ README.md
 composer.json
 composer.lock
 phpcs.xml.dist
+tests
 vendor
 node_modules
 *.zip
