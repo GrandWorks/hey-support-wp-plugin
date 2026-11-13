@@ -19,7 +19,7 @@ Install from the WordPress plugin directory, activate, then open
 **Settings → Hey Support** and connect the site to your agent.
 
 You need a Hey Support account. The chatbot cannot work without one: replies are
-generated on Hey Support's servers. There is a free tier.
+generated on Hey Support's servers. New workspaces start with a 15-day free trial, no card needed.
 
 ## What it does
 

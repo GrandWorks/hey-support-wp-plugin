@@ -330,7 +330,7 @@ function hey_support_render_connect_card(): void {
 		</p>
 		<?php hey_support_connect_button( true ); ?>
 		<ul class="hs-steps">
-			<li><?php esc_html_e( 'Sign in or create a free account', 'hey-support-ai-chatbot' ); ?></li>
+			<li><?php esc_html_e( 'Sign in or create an account', 'hey-support-ai-chatbot' ); ?></li>
 			<li><?php esc_html_e( 'Choose the agent for this site', 'hey-support-ai-chatbot' ); ?></li>
 			<li><?php esc_html_e( 'Come back here and choose where it appears', 'hey-support-ai-chatbot' ); ?></li>
 		</ul>
@@ -515,7 +515,7 @@ function hey_support_render_commerce_card( array $opts ): void {
 		<div class="hs-section">
 			<h3><?php esc_html_e( 'Order lookups', 'hey-support-ai-chatbot' ); ?></h3>
 			<p class="hs-help">
-				<?php esc_html_e( 'Let your agent answer "where is my order?", update a shipping address and issue a coupon. This one needs your permission because it reads customer orders: you approve it once in your own WooCommerce admin and the key is created and sent for you.', 'hey-support-ai-chatbot' ); ?>
+				<?php esc_html_e( 'Let your agent answer "where is my order?" and update a shipping address. This one needs your permission because it reads customer orders: you approve it once in your own WooCommerce admin and the key is created and sent for you.', 'hey-support-ai-chatbot' ); ?>
 			</p>
 			<p class="hs-row">
 				<a class="button" target="_blank" rel="noopener"
