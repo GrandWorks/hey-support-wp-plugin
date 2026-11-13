@@ -19,7 +19,7 @@ This plugin embeds the widget on any WordPress site in two clicks:
 1. Press **Connect to Hey Support** under **Settings > Hey Support**.
 2. Pick your agent. The widget appears on every page.
 
-**This plugin requires a Hey Support account.** Hey Support is a paid third-party service with a free tier; the chatbot cannot work without it, because replies are generated on Hey Support's servers. Sign up at https://hey.support and see the "External services" section below for exactly what is sent and when.
+**This plugin requires a Hey Support account.** Hey Support is a paid third-party service, and new workspaces start with a 15-day free trial with no card needed. The chatbot cannot work without it, because replies are generated on Hey Support's servers. Sign up at https://hey.support and see the "External services" section below for exactly what is sent and when.
 
 = WooCommerce-aware =
 
@@ -44,9 +44,7 @@ Cart figures are read at runtime from WooCommerce's own Store API rather than be
 
 = What you'll need =
 
-A Hey Support workspace at https://hey.support, and the public chatbot ID of the chatbot you want to embed. That ID is the only thing the widget needs.
-
-A workspace API token is optional. It powers the **Verify token** and **Refresh chatbot list** buttons on the settings screen, which use the Hey Support public API. That API is available on the Scale plan and up; on every other plan, paste the chatbot ID by hand.
+A Hey Support workspace at https://hey.support with an agent in it. Press **Connect to Hey Support** in the plugin settings, sign in, and pick the agent. There is no chatbot ID or API token to copy, on every plan.
 
 == External services ==
 
@@ -113,13 +111,9 @@ No. The plugin works on any WordPress site. WooCommerce features activate only w
 
 Conversations and the WooCommerce context described in the "External services" section are sent to and processed by Hey Support (https://hey.support), stored in the workspace tied to your account. The chatbot widget itself is loaded from https://hey.support/api/chat/embed.js over HTTPS. See the "External services" section for full details.
 
-= Is my API token exposed on the page? =
+= Is anything secret printed on my pages? =
 
-No. The embed carries only your public chatbot ID. The token is used server-side by the Verify and Refresh buttons, is never printed into your pages, and is never shown back to you after saving.
-
-= Why don't the Verify token and Refresh chatbot list buttons work? =
-
-Those two buttons call the Hey Support public API, which is available on the Scale plan and up. On other plans they will report that API access is not on your plan. Nothing is broken: paste your chatbot ID into the field directly and the widget works exactly the same.
+No. The embed carries only your agent's public chatbot ID, which is safe to show.
 
 = How do I show the widget on only specific pages? =
 
@@ -139,9 +133,9 @@ The shortcode can also force auto-open on or off for a single page, overriding t
 
 Yes. The plugin reads the cart from WooCommerce's Store API and refreshes on WooCommerce's standard cart events (`added_to_cart`, `removed_from_cart`, `wc_fragments_refreshed`, `updated_cart_totals`), so totals stay accurate without a page reload.
 
-= Is there a free tier? =
+= Is there a free trial? =
 
-Yes. Sign up at https://hey.support and start on the Free plan. Paid plans are one flat monthly price, never per message.
+Yes. New workspaces start with a 15-day free trial, no card needed. Sign up at https://hey.support. Plans are one flat monthly price, never per message.
 
 == Screenshots ==
 
@@ -156,6 +150,7 @@ Yes. Sign up at https://hey.support and start on the Free plan. Paid plans are o
 
 = 2.1.0 =
 * New optional checkbox at WooCommerce checkout, "Send me order updates on WhatsApp", for stores that collect a billing phone number. It is off by default: the store owner turns it on with the new "Offer WhatsApp order updates at checkout" setting under Your store, and until then checkout is unchanged. Once on, it works on both the classic and the block checkout, starts unticked, and is recorded on the order as the customer's consent. Orders are unchanged when it is left unticked.
+* The plugin listing and settings screen are brought up to date: a 15-day free trial instead of a free plan, no mention of the API token removed in 2.0.0, and Order lookups no longer promise coupons.
 
 = 2.0.0 =
 * Renamed to "Hey Support: AI Sales & Shopping Agent". Same plugin and the same settings -- the name now says what it does on a store. Nothing to reinstall or reconnect.
