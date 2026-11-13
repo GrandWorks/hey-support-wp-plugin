@@ -4,7 +4,7 @@ Tags: ai, chatbot, ecommerce, woocommerce, live-chat
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 2.1.1
+Stable tag: 2.1.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -171,6 +171,9 @@ Yes. The plugin reads the cart from WooCommerce's Store API and refreshes on Woo
 
 == Changelog ==
 
+= 2.1.2 =
+* The settings screen and the block use the listing's words: "the chat" instead of "the chat widget", "agent" instead of "chatbot", and "cart" instead of "basket".
+
 = 2.1.1 =
 * The plugin listing is rewritten to say what your agent does and which plan each store feature needs. It no longer says the agent recovers abandoned carts, which it does not.
 * The description on the Plugins screen says the same.
@@ -207,6 +210,9 @@ Yes. The plugin reads the cart from WooCommerce's Store API and refreshes on Woo
 * Verify-token and refresh-chatbot-list helpers for workspaces on plans that include public API access.
 
 == Upgrade Notice ==
+
+= 2.1.2 =
+Clearer wording on the settings screen. Nothing changes on your site.
 
 = 2.1.1 =
 A clearer listing and description. Nothing changes on your site.
