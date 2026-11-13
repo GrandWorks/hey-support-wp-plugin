@@ -5,7 +5,11 @@ Synced to WordPress.org SVN `/assets` on every tagged deploy.
 Icons and banners are PRESENT. Screenshots are still pending -- see the Screenshots
 section of readme.txt for the order they must match.
 
-Both icons and both banners are GENERATED, not drawn: `icon.svg` and the banners
+The banners (since 2.1.1) are supplied artwork: `banner-1544x500.png` is the file
+from the brand folder as delivered, and `banner-772x250.png` is that file scaled
+to half. Replace both together.
+
+Both icons are GENERATED, not drawn: `icon.svg` and the icons
 compose the logo's own vector paths, pulled out of `components/ui/logo.tsx` in the
 main repo by regex. Never retype path data -- breaking it on whitespace silently
 corrupts the shape. Regenerate rather than edit.
