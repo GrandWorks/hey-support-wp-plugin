@@ -41,7 +41,7 @@
 						{ title: __( 'Hey Support', 'hey-support-ai-chatbot' ), initialOpen: true },
 						el( TextControl, {
 							label: __( 'Chatbot ID (override)', 'hey-support-ai-chatbot' ),
-							help: __( 'Leave empty to use the chatbot configured in Settings > Hey Support.', 'hey-support-ai-chatbot' ),
+							help: __( 'Leave empty to use the agent connected in Settings > Hey Support.', 'hey-support-ai-chatbot' ),
 							value: attrs.chatbotId || '',
 							onChange: function ( v ) { setAttributes( { chatbotId: v } ); }
 						} ),
@@ -58,8 +58,8 @@
 					el( 'strong', null, 'Hey Support' ),
 					' - ',
 					attrs.chatbotId
-						? __( 'Chatbot: ', 'hey-support-ai-chatbot' ) + attrs.chatbotId
-						: __( 'Using the chatbot from Settings > Hey Support.', 'hey-support-ai-chatbot' )
+						? __( 'Chatbot ID: ', 'hey-support-ai-chatbot' ) + attrs.chatbotId
+						: __( 'Using the agent connected in Settings > Hey Support.', 'hey-support-ai-chatbot' )
 				)
 			);
 		},

@@ -3,7 +3,7 @@
  * Plugin Name:       Hey Support: AI Sales & Shopping Agent
  * Plugin URI:        https://hey.support
  * Description:       Adds your Hey Support AI agent to WordPress. It answers from your own pages, takes leads and hands over to you. On WooCommerce it shows live products and looks up orders.
- * Version:           2.1.1
+ * Version:           2.1.2
  * Requires at least: 6.5
  * Requires PHP:      7.4
  * Author:            Hey Support
@@ -17,7 +17,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'HEY_SUPPORT_VERSION', '2.1.1' );
+define( 'HEY_SUPPORT_VERSION', '2.1.2' );
 define( 'HEY_SUPPORT_FILE', __FILE__ );
 define( 'HEY_SUPPORT_DIR', plugin_dir_path( __FILE__ ) );
 define( 'HEY_SUPPORT_URL', plugin_dir_url( __FILE__ ) );

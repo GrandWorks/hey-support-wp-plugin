@@ -175,7 +175,7 @@ function hey_support_admin_enqueue( string $hook ): void {
 				'copy'       => __( 'Copy', 'hey-support-ai-chatbot' ),
 				'copied'     => __( 'Copied', 'hey-support-ai-chatbot' ),
 				'checking'   => __( 'Checking...', 'hey-support-ai-chatbot' ),
-				'confirmOff' => __( 'Disconnect this agent? The chat widget will stop appearing on your site. Your conversations and settings in Hey Support are not affected.', 'hey-support-ai-chatbot' ),
+				'confirmOff' => __( 'Disconnect this agent? The chat will stop appearing on your site. Your conversations and settings in Hey Support are not affected.', 'hey-support-ai-chatbot' ),
 			],
 		]
 	);
@@ -267,7 +267,7 @@ function hey_support_render_masthead( array $opts, bool $connected ): void {
 			<p class="hs-lede">
 				<?php
 				echo $connected
-					? esc_html__( 'This screen controls where your chat widget appears on this site and what it can read from your store. How the agent looks, what it knows and what it says are set in your Hey Support dashboard.', 'hey-support-ai-chatbot' )
+					? esc_html__( 'This screen controls where the chat appears on this site and what it can read from your store. How the agent looks, what it knows and what it says are set in your Hey Support dashboard.', 'hey-support-ai-chatbot' )
 					: esc_html__( 'Add an AI agent to this site that answers your visitors around the clock. Connect it below, then choose where the chat button appears. Everything the agent knows and says is set in your Hey Support dashboard.', 'hey-support-ai-chatbot' );
 				?>
 			</p>
@@ -448,7 +448,7 @@ function hey_support_render_placement_card( array $opts ): void {
 				<?php esc_html_e( 'Except on these pages', 'hey-support-ai-chatbot' ); ?>
 			</label>
 			<p class="hs-help">
-				<?php esc_html_e( 'Add any page you would rather keep quiet, such as checkout or a landing page you are running ads to. Leave this empty to show the widget everywhere you chose above.', 'hey-support-ai-chatbot' ); ?>
+				<?php esc_html_e( 'Add any page you would rather keep quiet, such as checkout or a landing page you are running ads to. Leave this empty to show the chat everywhere you chose above.', 'hey-support-ai-chatbot' ); ?>
 			</p>
 			<ul class="hs-chips" id="hey-support-chips"></ul>
 			<div class="hs-picker">
@@ -463,7 +463,7 @@ function hey_support_render_placement_card( array $opts ): void {
 				name="<?php echo esc_attr( HEY_SUPPORT_OPTION_KEY ); ?>[exclude_ids]"
 				value="<?php echo esc_attr( $opts['exclude_ids'] ); ?>" />
 			<p class="hs-subfield-off">
-				<?php esc_html_e( 'Not used while the widget only appears where you place it yourself. Your list is kept.', 'hey-support-ai-chatbot' ); ?>
+				<?php esc_html_e( 'Not used while the chat only appears where you place it yourself. Your list is kept.', 'hey-support-ai-chatbot' ); ?>
 			</p>
 		</div>
 	</div>
@@ -498,7 +498,7 @@ function hey_support_render_commerce_card( array $opts ): void {
 		<div class="hs-section">
 			<h3><?php esc_html_e( 'Product answers', 'hey-support-ai-chatbot' ); ?></h3>
 			<p class="hs-help">
-				<?php esc_html_e( 'Your agent shows real products from this store with live prices and stock, and can add them to the shopper\'s basket. No keys and no setup - it reads the public store data any visitor can already see.', 'hey-support-ai-chatbot' ); ?>
+				<?php esc_html_e( 'Your agent shows real products from this store with live prices and stock, and can add them to the shopper\'s cart. There are no keys and no setup: it reads the public store data any visitor can already see.', 'hey-support-ai-chatbot' ); ?>
 			</p>
 			<p class="hs-row">
 				<a class="button button-primary" target="_blank" rel="noopener"
@@ -554,7 +554,7 @@ function hey_support_render_advanced_card( array $opts ): void {
 			<div class="hs-advanced-body">
 				<div class="hs-field">
 					<span class="hs-label"><?php esc_html_e( 'Chatbot ID', 'hey-support-ai-chatbot' ); ?></span>
-					<p class="hs-help"><?php esc_html_e( 'Which agent this site is linked to. Set for you when you connect, and safe to share - it is visible in your site\'s page source. Change it only if support asks you to.', 'hey-support-ai-chatbot' ); ?></p>
+					<p class="hs-help"><?php esc_html_e( 'Which agent this site is linked to. Set for you when you connect. It is safe to share, and already visible in your site\'s page source. Change it only if support asks you to.', 'hey-support-ai-chatbot' ); ?></p>
 					<div class="hs-copyrow">
 						<code><?php echo esc_html( (string) $opts['chatbot_id'] ); ?></code>
 						<button type="button" class="button button-small hs-copy"
@@ -591,7 +591,7 @@ function hey_support_render_advanced_card( array $opts ): void {
 
 				<div class="hs-field">
 					<span class="hs-label"><?php esc_html_e( 'Place it yourself', 'hey-support-ai-chatbot' ); ?></span>
-					<p class="hs-help"><?php esc_html_e( 'Add the Hey Support block in the editor, or paste this shortcode. Either one loads the widget on that page even when you have chosen "Only where I place it" above.', 'hey-support-ai-chatbot' ); ?></p>
+					<p class="hs-help"><?php esc_html_e( 'Add the Hey Support block in the editor, or paste this shortcode. Either one adds the chat to that page even when you have chosen "Only where I place it" above.', 'hey-support-ai-chatbot' ); ?></p>
 					<div class="hs-copyrow">
 						<code>[hey_support]</code>
 						<button type="button" class="button button-small hs-copy" data-copy="[hey_support]">
@@ -602,7 +602,7 @@ function hey_support_render_advanced_card( array $opts ): void {
 
 				<div class="hs-field hs-danger">
 					<span class="hs-label"><?php esc_html_e( 'Disconnect', 'hey-support-ai-chatbot' ); ?></span>
-					<p class="hs-help"><?php esc_html_e( 'Unlink this site from the agent and stop showing the chat widget. Your conversations, leads and settings in Hey Support are untouched, and you can connect again at any time.', 'hey-support-ai-chatbot' ); ?></p>
+					<p class="hs-help"><?php esc_html_e( 'Unlink this site from the agent and stop showing the chat. Your conversations, leads and settings in Hey Support are untouched, and you can connect again at any time.', 'hey-support-ai-chatbot' ); ?></p>
 					<?php
 					// Points at a form rendered AFTER the settings form, via the
 					// HTML5 `form` attribute. Nesting one form inside another is
@@ -661,7 +661,7 @@ function hey_support_connect_result_notice( string $code, string $name ): void {
 				: __( 'Connected. Your agent is live on this site.', 'hey-support-ai-chatbot' );
 			break;
 		case 'disconnected':
-			$message = __( 'Disconnected. The chat widget is no longer shown on this site.', 'hey-support-ai-chatbot' );
+			$message = __( 'Disconnected. The chat is no longer shown on this site.', 'hey-support-ai-chatbot' );
 			break;
 		case 'expired':
 			$message = __( 'That connect link had expired. Press Connect to try again.', 'hey-support-ai-chatbot' );
@@ -747,7 +747,7 @@ function hey_support_ajax_storefront_test(): void {
 	wp_send_json_success(
 		[
 			/* translators: %d: number of published products. */
-			'message' => sprintf( _n( 'Ready - %d product is visible to your agent.', 'Ready - %d products are visible to your agent.', $total, 'hey-support-ai-chatbot' ), $total ),
+			'message' => sprintf( _n( 'Ready. %d product is visible to your agent.', 'Ready. %d products are visible to your agent.', $total, 'hey-support-ai-chatbot' ), $total ),
 		]
 	);
 }
